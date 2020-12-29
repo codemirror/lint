@@ -48,7 +48,7 @@ class LintState {
 
 function findDiagnostic(diagnostics: DecorationSet, diagnostic: Diagnostic | null = null, after = 0): SelectedDiagnostic | null {
   let found: SelectedDiagnostic | null = null
-  diagnostics.between(after, diagnostics.length, (from, to, {spec}) => {
+  diagnostics.between(after, 1e9, (from, to, {spec}) => {
     if (diagnostic && spec.diagnostic != diagnostic) return
     found = new SelectedDiagnostic(from, to, spec.diagnostic)
     return false
