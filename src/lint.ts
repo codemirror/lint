@@ -1,8 +1,8 @@
 import {EditorView, ViewPlugin, Decoration, DecorationSet,
-        WidgetType, ViewUpdate, Command, themeClass, logException, KeyBinding} from "@codemirror/next/view"
-import {StateEffect, StateField, Extension, TransactionSpec, EditorState} from "@codemirror/next/state"
-import {hoverTooltip} from "@codemirror/next/tooltip"
-import {panels, Panel, showPanel, getPanel} from "@codemirror/next/panel"
+        WidgetType, ViewUpdate, Command, themeClass, logException, KeyBinding} from "@codemirror/view"
+import {StateEffect, StateField, Extension, TransactionSpec, EditorState} from "@codemirror/state"
+import {hoverTooltip} from "@codemirror/tooltip"
+import {panels, Panel, showPanel, getPanel} from "@codemirror/panel"
 import elt from "crelt"
 
 /// Describes a problem or hint for a piece of code.
