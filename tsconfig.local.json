@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "lib": ["es6", "dom", "scripthost"],
-    "types": ["mocha"],
     "stripInternal": true,
     "noUnusedLocals": true,
     "strict": true,

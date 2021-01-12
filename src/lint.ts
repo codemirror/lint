@@ -240,18 +240,24 @@ export function linter(source: (view: EditorView) => readonly Diagnostic[] | Pro
 }
 
 function assignKeys(actions: readonly Action[] | undefined) {
-  let assigned: string[] = []
-  if (actions) actions: for (let {name} of actions) {
+  if (!actions) {
+    return [];
+  }
+
+  const names: string[] = actions.map(action => action.name);
+
+  return names.reduce((assigned: string[], name) => {
     for (let i = 0; i < name.length; i++) {
       let ch = name[i]
       if (/[a-zA-Z]/.test(ch) && !assigned.some(c => c.toLowerCase() == ch.toLowerCase())) {
         assigned.push(ch)
-        continue actions
+        return assigned
       }
     }
+
     assigned.push("")
-  }
-  return assigned
+    return assigned
+  }, []);
 }
 
 function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boolean) {
