@@ -272,7 +272,8 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
       return elt("button", {
         class: themeClass("diagnosticAction"),
         onclick: click,
-        onmousedown: click
+        onmousedown: click,
+        "aria-label": `${name} action${keyIndex < 0 ? "" : ` (access key "${keys[i]})"`}`
       }, nameElt)
     }),
     diagnostic.source && elt("div", {class: themeClass("diagnosticSource")}, diagnostic.source))
