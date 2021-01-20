@@ -273,7 +273,7 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
         class: themeClass("diagnosticAction"),
         onclick: click,
         onmousedown: click,
-        "aria-label": `${name} action${keyIndex < 0 ? "" : ` (access key "${keys[i]})"`}`
+        "aria-label": ` Action: ${name}${keyIndex < 0 ? "" : ` (access key "${keys[i]})"`}.`
       }, nameElt)
     }),
     diagnostic.source && elt("div", {class: themeClass("diagnosticSource")}, diagnostic.source))
@@ -295,6 +295,7 @@ class PanelItem {
 
   constructor(view: EditorView, readonly diagnostic: Diagnostic) {
     this.dom = renderDiagnostic(view, diagnostic, true)
+    this.dom.id = this.id
     this.dom.setAttribute("role", "option")
   }
 }
