@@ -56,8 +56,8 @@ function findDiagnostic(diagnostics: DecorationSet, diagnostic: Diagnostic | nul
   return found
 }
 
-function maybeEnableLint(state: EditorState) {
-  return state.field(lintState, false) ? undefined : {append: [
+function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unknown>[]) {
+  return state.field(lintState, false) ? effects : effects.concat(StateEffect.appendConfig.of([
     lintState,
     EditorView.decorations.compute([lintState], state => {
       let {selected, panel} = state.field(lintState)
@@ -68,15 +68,14 @@ function maybeEnableLint(state: EditorState) {
     panels(),
     hoverTooltip(lintTooltip),
     baseTheme
-  ]}
+  ]))
 }
 
 /// State effect that is used to update the current set of
 /// diagnostics.
 export function setDiagnostics(state: EditorState, diagnostics: readonly Diagnostic[]): TransactionSpec {
   return {
-    effects: setDiagnosticsEffect.of(diagnostics),
-    reconfigure: maybeEnableLint(state)
+    effects: maybeEnableLint(state, [setDiagnosticsEffect.of(diagnostics)])
   }
 }
 
@@ -157,8 +156,7 @@ function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
 export const openLintPanel: Command = (view: EditorView) => {
   let field = view.state.field(lintState, false)
   if (!field || !field.panel)
-    view.dispatch({effects: togglePanel.of(true),
-                   reconfigure: maybeEnableLint(view.state)})
+    view.dispatch({effects: maybeEnableLint(view.state, [togglePanel.of(true)])})
   let panel = getPanel(view, LintPanel.open)
   if (panel) (panel.dom.querySelector(".cm-panel-lint ul") as HTMLElement).focus()
   return true
