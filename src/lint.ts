@@ -1,5 +1,5 @@
 import {EditorView, ViewPlugin, Decoration, DecorationSet,
-        WidgetType, ViewUpdate, Command, themeClass, logException, KeyBinding} from "@codemirror/view"
+        WidgetType, ViewUpdate, Command, logException, KeyBinding} from "@codemirror/view"
 import {StateEffect, StateField, Extension, TransactionSpec, EditorState} from "@codemirror/state"
 import {hoverTooltip} from "@codemirror/tooltip"
 import {panels, Panel, showPanel, getPanel} from "@codemirror/panel"
@@ -104,7 +104,7 @@ const lintState = StateField.define<LintState>({
         let ranges = Decoration.set(effect.value.map((d: Diagnostic) => {
           return d.from < d.to
             ? Decoration.mark({
-              attributes: {class: themeClass("lintRange." + d.severity)},
+              attributes: {class: "cm-lintRange cm-lintRange-" + d.severity},
               diagnostic: d
             }).range(d.from, d.to)
           : Decoration.widget({
@@ -126,7 +126,7 @@ const lintState = StateField.define<LintState>({
                  EditorView.decorations.from(f, s => s.diagnostics)]
 })
 
-const activeMark = Decoration.mark({class: themeClass("lintRange.active")})
+const activeMark = Decoration.mark({class: "cm-lintRange cm-lintRange-active"})
 
 function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
   let {diagnostics} = view.state.field(lintState)
@@ -145,7 +145,7 @@ function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
     pos: stackStart,
     end: stackEnd,
     above: view.state.doc.lineAt(stackStart).to < stackEnd,
-    style: "lint",
+    class: "cm-tooltip-lint",
     create() {
       return {dom: elt("ul", found.map(d => renderDiagnostic(view, d, false)))}
     }
@@ -255,8 +255,8 @@ function assignKeys(actions: readonly Action[] | undefined) {
 function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boolean) {
   let keys = inPanel ? assignKeys(diagnostic.actions) : []
   return elt(
-    "li", {class: themeClass("diagnostic." + diagnostic.severity)},
-    elt("span", {class: themeClass("diagnosticText")}, diagnostic.message),
+    "li", {class: "cm-diagnostic cm-diagnostic-" + diagnostic.severity},
+    elt("span", {class: "cm-diagnosticText"}, diagnostic.message),
     diagnostic.actions?.map((action, i) => {
       let click = (e: Event) => {
         e.preventDefault()
@@ -268,13 +268,13 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
                                            elt("u", name.slice(keyIndex, keyIndex + 1)),
                                            name.slice(keyIndex + 1)]
       return elt("button", {
-        class: themeClass("diagnosticAction"),
+        class: "cm-diagnosticAction",
         onclick: click,
         onmousedown: click,
         "aria-label": ` Action: ${name}${keyIndex < 0 ? "" : ` (access key "${keys[i]})"`}.`
       }, nameElt)
     }),
-    diagnostic.source && elt("div", {class: themeClass("diagnosticSource")}, diagnostic.source))
+    diagnostic.source && elt("div", {class: "cm-diagnosticSource"}, diagnostic.source))
 }
 
 class DiagnosticWidget extends WidgetType {
@@ -283,7 +283,7 @@ class DiagnosticWidget extends WidgetType {
   eq(other: DiagnosticWidget) { return other.diagnostic == this.diagnostic }
 
   toDOM() {
-    return elt("span", {class: themeClass("lintPoint." + this.diagnostic.severity)})
+    return elt("span", {class: "cm-lintPoint cm-lintPoint-" + this.diagnostic.severity})
   }
 }
 
@@ -446,7 +446,7 @@ class LintPanel implements Panel {
     })
   }
 
-  get style() { return "lint" }
+  get class() { return "cm-panel-lint" }
 
   static open(view: EditorView) { return new LintPanel(view) }
 }
@@ -460,16 +460,16 @@ function underline(color: string) {
 }
 
 const baseTheme = EditorView.baseTheme({
-  $diagnostic: {
+  ".cm-diagnostic": {
     padding: "3px 6px 3px 8px",
     marginLeft: "-1px",
     display: "block"
   },
-  "$diagnostic.error": { borderLeft: "5px solid #d11" },
-  "$diagnostic.warning": { borderLeft: "5px solid orange" },
-  "$diagnostic.info": { borderLeft: "5px solid #999" },
+  ".cm-diagnostic-error": { borderLeft: "5px solid #d11" },
+  ".cm-diagnostic-warning": { borderLeft: "5px solid orange" },
+  ".cm-diagnostic-info": { borderLeft: "5px solid #999" },
 
-  $diagnosticAction: {
+  ".cm-diagnosticAction": {
     font: "inherit",
     border: "none",
     padding: "2px 4px",
@@ -479,22 +479,22 @@ const baseTheme = EditorView.baseTheme({
     marginLeft: "8px"
   },
 
-  $diagnosticSource: {
+  ".cm-diagnosticSource": {
     fontSize: "70%",
     opacity: .7
   },
 
-  $lintRange: {
+  ".cm-lintRange": {
     backgroundPosition: "left bottom",
     backgroundRepeat: "repeat-x"
   },
 
-  "$lintRange.error": { backgroundImage: underline("#d11") },
-  "$lintRange.warning": { backgroundImage: underline("orange") },
-  "$lintRange.info": { backgroundImage: underline("#999") },
-  "$lintRange.active": { backgroundColor: "#ffdd9980" },
+  ".cm-lintRange-error": { backgroundImage: underline("#d11") },
+  ".cm-lintRange-warning": { backgroundImage: underline("orange") },
+  ".cm-lintRange-info": { backgroundImage: underline("#999") },
+  ".cm-lintRange-active": { backgroundColor: "#ffdd9980" },
 
-  $lintPoint: {
+  ".cm-lintPoint": {
     position: "relative",
 
     "&:after": {
@@ -508,14 +508,14 @@ const baseTheme = EditorView.baseTheme({
     }
   },
 
-  "$lintPoint.warning": {
+  ".cm-lintPoint-warning": {
     "&:after": { borderBottomColor: "orange" }
   },
-  "$lintPoint.info": {
+  ".cm-lintPoint-info": {
     "&:after": { borderBottomColor: "#999" }
   },
 
-  "$panel.lint": {
+  ".cm-panel.cm-panel-lint": {
     position: "relative",
     "& ul": {
       maxHeight: "100px",
@@ -546,7 +546,7 @@ const baseTheme = EditorView.baseTheme({
     }
   },
 
-  "$tooltip.lint": {
+  ".cm-tooltip.cm-tooltip-lint": {
     padding: 0,
     margin: 0
   }
