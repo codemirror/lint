@@ -1,3 +1,11 @@
+## 0.18.0 (2021-03-03)
+
+### Bug fixes
+
+Make sure action access keys are discoverable for screen reader users.
+
+Selection in the lint panel should now be properly visible to screen readers.
+
 ## 0.17.1 (2021-01-06)
 
 ### New features
