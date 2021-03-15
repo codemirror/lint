@@ -1,3 +1,9 @@
+## 0.18.1 (2021-03-15)
+
+### Bug fixes
+
+Adjust to current @codemirror/panel and @codemirror/tooltip interfaces.
+
 ## 0.18.0 (2021-03-03)
 
 ### Bug fixes
