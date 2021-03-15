@@ -26,9 +26,9 @@
   "sideEffects": false,
   "license": "MIT",
   "dependencies": {
-    "@codemirror/panel": "^0.18.0",
+    "@codemirror/panel": "^0.18.1",
     "@codemirror/state": "^0.18.0",
-    "@codemirror/tooltip": "^0.18.0",
+    "@codemirror/tooltip": "^0.18.4",
     "@codemirror/view": "^0.18.0",
     "crelt": "^1.0.5"
   },
