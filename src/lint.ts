@@ -145,9 +145,8 @@ function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
     pos: stackStart,
     end: stackEnd,
     above: view.state.doc.lineAt(stackStart).to < stackEnd,
-    class: "cm-tooltip-lint",
     create() {
-      return {dom: elt("ul", found.map(d => renderDiagnostic(view, d, false)))}
+      return {dom: elt("ul", {class: "cm-tooltip-lint"}, found.map(d => renderDiagnostic(view, d, false)))}
     }
   }
 }
