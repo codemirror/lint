@@ -342,7 +342,7 @@ class LintPanel implements Panel {
       onkeydown,
       onclick
     })
-    this.dom = elt("div", this.list, elt("button", {
+    this.dom = elt("div", {class: "cm-panel-lint"}, this.list, elt("button", {
       name: "close",
       "aria-label": this.view.state.phrase("close"),
       onclick: () => closeLintPanel(this.view)
@@ -444,8 +444,6 @@ class LintPanel implements Panel {
       effects: movePanelSelection.of(selection)
     })
   }
-
-  get class() { return "cm-panel-lint" }
 
   static open(view: EditorView) { return new LintPanel(view) }
 }
