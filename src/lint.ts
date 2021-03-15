@@ -2,7 +2,7 @@ import {EditorView, ViewPlugin, Decoration, DecorationSet,
         WidgetType, ViewUpdate, Command, logException, KeyBinding} from "@codemirror/view"
 import {StateEffect, StateField, Extension, TransactionSpec, EditorState} from "@codemirror/state"
 import {hoverTooltip} from "@codemirror/tooltip"
-import {Panel, showPanel, getPanel} from "@codemirror/panel"
+import {PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/panel"
 import elt from "crelt"
 
 /// Describes a problem or hint for a piece of code.
@@ -42,7 +42,7 @@ class SelectedDiagnostic {
 
 class LintState {
   constructor(readonly diagnostics: DecorationSet,
-              readonly panel: ((view: EditorView) => Panel) | null,
+              readonly panel: PanelConstructor | null,
               readonly selected: SelectedDiagnostic | null) {}
 }
 
@@ -121,7 +121,7 @@ const lintState = StateField.define<LintState>({
 
     return value
   },
-  provide: f => [showPanel.computeN([f], s => { let {panel} = s.field(f); return panel ? [panel] : [] }),
+  provide: f => [showPanel.from(f, val => val.panel),
                  EditorView.decorations.from(f, s => s.diagnostics)]
 })
 
