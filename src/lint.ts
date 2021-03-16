@@ -426,10 +426,6 @@ class LintPanel implements Panel {
       }
     }
     while (domPos) rm()
-    if (!this.list.firstChild) this.list.appendChild(renderDiagnostic(this.view, {
-      severity: "info",
-      message: this.view.state.phrase("No diagnostics")
-    } as Diagnostic, true))
   }
 
   moveSelection(selectedIndex: number) {
