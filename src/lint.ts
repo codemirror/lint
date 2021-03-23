@@ -70,7 +70,7 @@ function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unkno
   ]))
 }
 
-/// State effect that is used to update the current set of
+/// Returns a transaction spec which updates the current set of
 /// diagnostics.
 export function setDiagnostics(state: EditorState, diagnostics: readonly Diagnostic[]): TransactionSpec {
   return {
