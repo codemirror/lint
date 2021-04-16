@@ -190,19 +190,25 @@ export const lintKeymap: readonly KeyBinding[] = [
   {key: "F8", run: nextDiagnostic}
 ]
 
-const LintDelay = 500
-
 /// Given a diagnostic source, this function returns an extension that
 /// enables linting with that source. It will be called whenever the
 /// editor is idle (after its content changed).
-export function linter(source: (view: EditorView) => readonly Diagnostic[] | Promise<readonly Diagnostic[]>): Extension {
+export function linter(
+  source: (view: EditorView) => readonly Diagnostic[] | Promise<readonly Diagnostic[]>,
+  config: {
+    /// Time to wait (in milliseconds) after a change before running
+    /// the linter. Defaults to 750ms.
+    delay?: number
+  } = {}
+): Extension {
+  let delay = config.delay ?? 750
   return ViewPlugin.fromClass(class {
-    lintTime = Date.now() + LintDelay
+    lintTime = Date.now() + delay
     set = true
 
     constructor(readonly view: EditorView) {
       this.run = this.run.bind(this)
-      setTimeout(this.run, LintDelay)
+      setTimeout(this.run, delay)
     }
 
     run() {
@@ -225,10 +231,10 @@ export function linter(source: (view: EditorView) => readonly Diagnostic[] | Pro
 
     update(update: ViewUpdate) {
       if (update.docChanged) {
-        this.lintTime = Date.now() + LintDelay
+        this.lintTime = Date.now() + delay
         if (!this.set) {
           this.set = true
-          setTimeout(this.run, LintDelay)
+          setTimeout(this.run, delay)
         }
       }
     }
