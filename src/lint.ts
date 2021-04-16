@@ -455,7 +455,8 @@ const baseTheme = EditorView.baseTheme({
   ".cm-diagnostic": {
     padding: "3px 6px 3px 8px",
     marginLeft: "-1px",
-    display: "block"
+    display: "block",
+    whiteSpace: "pre-wrap"
   },
   ".cm-diagnostic-error": { borderLeft: "5px solid #d11" },
   ".cm-diagnostic-warning": { borderLeft: "5px solid orange" },
