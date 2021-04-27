@@ -543,10 +543,5 @@ const baseTheme = EditorView.baseTheme({
       padding: 0,
       margin: 0
     }
-  },
-
-  ".cm-tooltip.cm-tooltip-lint": {
-    padding: 0,
-    margin: 0
   }
 })
