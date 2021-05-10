@@ -44,6 +44,21 @@ class LintState {
   constructor(readonly diagnostics: DecorationSet,
               readonly panel: PanelConstructor | null,
               readonly selected: SelectedDiagnostic | null) {}
+
+  static init(diagnostics: readonly Diagnostic[], panel: PanelConstructor | null) {
+    let ranges = Decoration.set(diagnostics.map((d: Diagnostic) => {
+      return d.from < d.to
+        ? Decoration.mark({
+          attributes: {class: "cm-lintRange cm-lintRange-" + d.severity},
+          diagnostic: d
+        }).range(d.from, d.to)
+      : Decoration.widget({
+        widget: new DiagnosticWidget(d),
+        diagnostic: d
+      }).range(d.from)
+    }))
+    return new LintState(ranges, panel, findDiagnostic(ranges))
+  }
 }
 
 function findDiagnostic(diagnostics: DecorationSet, diagnostic: Diagnostic | null = null, after = 0): SelectedDiagnostic | null {
@@ -56,9 +71,9 @@ function findDiagnostic(diagnostics: DecorationSet, diagnostic: Diagnostic | nul
   return found
 }
 
-function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unknown>[]) {
+function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unknown>[], diagnostics?: readonly Diagnostic[]) {
   return state.field(lintState, false) ? effects : effects.concat(StateEffect.appendConfig.of([
-    lintState,
+    diagnostics ? lintState.init(() => LintState.init(diagnostics, null)) : lintState,
     EditorView.decorations.compute([lintState], state => {
       let {selected, panel} = state.field(lintState)
       return !selected || !panel || selected.from == selected.to ? Decoration.none : Decoration.set([
@@ -74,7 +89,7 @@ function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unkno
 /// diagnostics.
 export function setDiagnostics(state: EditorState, diagnostics: readonly Diagnostic[]): TransactionSpec {
   return {
-    effects: maybeEnableLint(state, [setDiagnosticsEffect.of(diagnostics)])
+    effects: maybeEnableLint(state, [setDiagnosticsEffect.of(diagnostics)], diagnostics)
   }
 }
 
@@ -100,18 +115,7 @@ const lintState = StateField.define<LintState>({
 
     for (let effect of tr.effects) {
       if (effect.is(setDiagnosticsEffect)) {
-        let ranges = Decoration.set(effect.value.map((d: Diagnostic) => {
-          return d.from < d.to
-            ? Decoration.mark({
-              attributes: {class: "cm-lintRange cm-lintRange-" + d.severity},
-              diagnostic: d
-            }).range(d.from, d.to)
-          : Decoration.widget({
-            widget: new DiagnosticWidget(d),
-            diagnostic: d
-          }).range(d.from)
-        }))
-        value = new LintState(ranges, value.panel, findDiagnostic(ranges))
+        value = LintState.init(effect.value, value.panel)
       } else if (effect.is(togglePanel)) {
         value = new LintState(value.diagnostics, effect.value ? LintPanel.open : null, value.selected)
       } else if (effect.is(movePanelSelection)) {
