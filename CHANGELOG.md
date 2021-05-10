@@ -1,3 +1,9 @@
+## 0.18.3 (2021-05-10)
+
+### Bug fixes
+
+Fix a regression where using `setDiagnostics` when linting hadn't been abled yet ignored the first set of diagnostics.
+
 ## 0.18.2 (2021-04-16)
 
 ### Bug fixes
