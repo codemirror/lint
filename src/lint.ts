@@ -516,6 +516,11 @@ const baseTheme = EditorView.baseTheme({
   ".cm-lintRange-info": { backgroundImage: underline("#999") },
   ".cm-lintRange-active": { backgroundColor: "#ffdd9980" },
 
+  ".cm-tooltip-lint": {
+    padding: 0,
+    margin: 0
+  },
+
   ".cm-lintPoint": {
     position: "relative",
 
