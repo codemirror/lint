@@ -1,3 +1,11 @@
+## 0.18.4 (2021-06-07)
+
+### Bug fixes
+
+Multiple `linter` extensions can now be added to an editor without disrupting each other.
+
+Fix poor layout on lint tooltips due to changes in @codemirror/tooltip.
+
 ## 0.18.3 (2021-05-10)
 
 ### Bug fixes
