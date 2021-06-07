@@ -1,6 +1,6 @@
 import {EditorView, ViewPlugin, Decoration, DecorationSet,
         WidgetType, ViewUpdate, Command, logException, KeyBinding} from "@codemirror/view"
-import {StateEffect, StateField, Extension, TransactionSpec, EditorState} from "@codemirror/state"
+import {StateEffect, StateField, Extension, TransactionSpec, EditorState, Facet} from "@codemirror/state"
 import {hoverTooltip} from "@codemirror/tooltip"
 import {PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/panel"
 import elt from "crelt"
@@ -56,7 +56,7 @@ class LintState {
         widget: new DiagnosticWidget(d),
         diagnostic: d
       }).range(d.from)
-    }))
+    }), true)
     return new LintState(ranges, panel, findDiagnostic(ranges))
   }
 }
@@ -194,55 +194,74 @@ export const lintKeymap: readonly KeyBinding[] = [
   {key: "F8", run: nextDiagnostic}
 ]
 
+type LintSource = (view: EditorView) => readonly Diagnostic[] | Promise<readonly Diagnostic[]>
+
+const lintPlugin = ViewPlugin.fromClass(class {
+  lintTime: number
+  timeout = -1
+  set = true
+
+  constructor(readonly view: EditorView) {
+    let {delay} = view.state.facet(lintSource)
+    this.lintTime = Date.now() + delay
+    this.run = this.run.bind(this)
+    this.timeout = setTimeout(this.run, delay)
+  }
+
+  run() {
+    let now = Date.now()
+    if (now < this.lintTime - 10) {
+      setTimeout(this.run, this.lintTime - now)
+    } else {
+      this.set = false
+      let {state} = this.view, {sources} = state.facet(lintSource)
+      Promise.all(sources.map(source => Promise.resolve(source(this.view)))).then(
+        annotations => {
+          let all = annotations.reduce((a, b) => a.concat(b))
+          if (this.view.state.doc == state.doc &&
+              (all.length || this.view.state.field(lintState, false)?.diagnostics?.size))
+            this.view.dispatch(setDiagnostics(this.view.state, all))
+        },
+        error => { logException(this.view.state, error) }
+      )
+    }
+  }
+
+  update(update: ViewUpdate) {
+    if (update.docChanged) {
+      let {delay} = update.state.facet(lintSource)
+      this.lintTime = Date.now() + delay
+      if (!this.set) {
+        this.set = true
+        this.timeout = setTimeout(this.run, delay)
+      }
+    }
+  }
+
+  destroy() {
+    clearTimeout(this.timeout)
+  }
+})
+
+const lintSource = Facet.define<{source: LintSource, delay: number}, {sources: readonly LintSource[], delay: number}>({
+  combine(input) {
+    return {sources: input.map(i => i.source), delay: input.length ? Math.max(...input.map(i => i.delay)) : 750}
+  },
+  enables: lintPlugin
+})
+
 /// Given a diagnostic source, this function returns an extension that
 /// enables linting with that source. It will be called whenever the
 /// editor is idle (after its content changed).
 export function linter(
-  source: (view: EditorView) => readonly Diagnostic[] | Promise<readonly Diagnostic[]>,
+  source: LintSource,
   config: {
     /// Time to wait (in milliseconds) after a change before running
     /// the linter. Defaults to 750ms.
     delay?: number
   } = {}
 ): Extension {
-  let delay = config.delay ?? 750
-  return ViewPlugin.fromClass(class {
-    lintTime = Date.now() + delay
-    set = true
-
-    constructor(readonly view: EditorView) {
-      this.run = this.run.bind(this)
-      setTimeout(this.run, delay)
-    }
-
-    run() {
-      let now = Date.now()
-      if (now < this.lintTime - 10) {
-        setTimeout(this.run, this.lintTime - now)
-      } else {
-        this.set = false
-        let {state} = this.view
-        Promise.resolve(source(this.view)).then(
-          annotations => {
-            if (this.view.state.doc == state.doc &&
-                (annotations.length || this.view.state.field(lintState, false)?.diagnostics?.size))
-              this.view.dispatch(setDiagnostics(this.view.state, annotations))
-          },
-          error => { logException(this.view.state, error) }
-        )
-      }
-    }
-
-    update(update: ViewUpdate) {
-      if (update.docChanged) {
-        this.lintTime = Date.now() + delay
-        if (!this.set) {
-          this.set = true
-          setTimeout(this.run, delay)
-        }
-      }
-    }
-  })
+  return lintSource.of({source, delay: config.delay ?? 750})
 }
 
 function assignKeys(actions: readonly Action[] | undefined) {
