@@ -238,6 +238,13 @@ const lintPlugin = ViewPlugin.fromClass(class {
     }
   }
 
+  force() {
+    if (this.set) {
+      this.lintTime = Date.now()
+      this.run()
+    }
+  }
+
   destroy() {
     clearTimeout(this.timeout)
   }
@@ -262,6 +269,13 @@ export function linter(
   } = {}
 ): Extension {
   return lintSource.of({source, delay: config.delay ?? 750})
+}
+
+/// Forces any linters [configured](#lint.linter) to run when the
+/// editor is idle to run right away.
+export function forceLinting(view: EditorView) {
+  let plugin = view.plugin(lintPlugin)
+  if (plugin) plugin.force()
 }
 
 function assignKeys(actions: readonly Action[] | undefined) {

@@ -6,6 +6,8 @@
 
 @linter
 
+@forceLinting
+
 @openLintPanel
 
 @closeLintPanel
