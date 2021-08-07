@@ -1,3 +1,13 @@
+## 0.18.5 (2021-08-07)
+
+### Bug fixes
+
+Fix an issue that caused `openLintPanel` to not actually open the panel when ran before the editor had any lint state loaded.
+
+### New features
+
+The package now exports a `forceLinting` function that forces pending lint queries to run immediately.
+
 ## 0.18.4 (2021-06-07)
 
 ### Bug fixes
