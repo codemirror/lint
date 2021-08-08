@@ -359,7 +359,7 @@ class LintPanel implements Panel {
         this.moveSelection(this.items.length - 1)
       } else if (event.keyCode == 13) { // Enter
         this.view.focus()
-      } else if (event.keyCode >= 65 && event.keyCode <= 90 && this.items.length) { // A-Z
+      } else if (event.keyCode >= 65 && event.keyCode <= 90 && this.selectedIndex >= 0) { // A-Z
         let {diagnostic} = this.items[this.selectedIndex], keys = assignKeys(diagnostic.actions)
         for (let i = 0; i < keys.length; i++) if (keys[i].toUpperCase().charCodeAt(0) == event.keyCode) {
           let found = findDiagnostic(this.view.state.field(lintState).diagnostics, diagnostic)
@@ -446,7 +446,7 @@ class LintPanel implements Panel {
           else if (sel.bottom > panel.bottom) this.list.scrollTop += sel.bottom - panel.bottom
         }
       })
-    } else if (!this.items.length) {
+    } else if (this.selectedIndex < 0) {
       this.list.removeAttribute("aria-activedescendant")
     }
     if (needsSync) this.sync()
@@ -472,7 +472,7 @@ class LintPanel implements Panel {
   }
 
   moveSelection(selectedIndex: number) {
-    if (this.items.length == 0) return
+    if (this.selectedIndex < 0) return
     let field = this.view.state.field(lintState)
     let selection = findDiagnostic(field.diagnostics, this.items[selectedIndex].diagnostic)
     if (!selection) return
