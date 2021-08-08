@@ -1,3 +1,9 @@
+## 0.18.6 (2021-08-08)
+
+### Bug fixes
+
+Fix a crash in the key handler of the lint panel when no diagnostics are available.
+
 ## 0.18.5 (2021-08-07)
 
 ### Bug fixes
