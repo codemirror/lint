@@ -45,17 +45,18 @@ class LintState {
               readonly panel: PanelConstructor | null,
               readonly selected: SelectedDiagnostic | null) {}
 
-  static init(diagnostics: readonly Diagnostic[], panel: PanelConstructor | null) {
+  static init(diagnostics: readonly Diagnostic[], panel: PanelConstructor | null, state: EditorState) {
     let ranges = Decoration.set(diagnostics.map((d: Diagnostic) => {
-      return d.from < d.to
-        ? Decoration.mark({
+      // For zero-length ranges or ranges covering only a line break, create a widget
+      return d.from == d.to || (d.from == d.to - 1 && state.doc.lineAt(d.from).to == d.from)
+        ? Decoration.widget({
+          widget: new DiagnosticWidget(d),
+          diagnostic: d
+        }).range(d.from)
+        : Decoration.mark({
           attributes: {class: "cm-lintRange cm-lintRange-" + d.severity},
           diagnostic: d
         }).range(d.from, d.to)
-      : Decoration.widget({
-        widget: new DiagnosticWidget(d),
-        diagnostic: d
-      }).range(d.from)
     }), true)
     return new LintState(ranges, panel, findDiagnostic(ranges))
   }
@@ -89,7 +90,7 @@ function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unkno
 /// diagnostics.
 export function setDiagnostics(state: EditorState, diagnostics: readonly Diagnostic[]): TransactionSpec {
   return {
-    effects: maybeEnableLint(state, [setDiagnosticsEffect.of(diagnostics)], () => LintState.init(diagnostics, null))
+    effects: maybeEnableLint(state, [setDiagnosticsEffect.of(diagnostics)], () => LintState.init(diagnostics, null, state))
   }
 }
 
@@ -115,7 +116,7 @@ const lintState = StateField.define<LintState>({
 
     for (let effect of tr.effects) {
       if (effect.is(setDiagnosticsEffect)) {
-        value = LintState.init(effect.value, value.panel)
+        value = LintState.init(effect.value, value.panel, tr.state)
       } else if (effect.is(togglePanel)) {
         value = new LintState(value.diagnostics, effect.value ? LintPanel.open : null, value.selected)
       } else if (effect.is(movePanelSelection)) {
@@ -158,7 +159,8 @@ function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
 export const openLintPanel: Command = (view: EditorView) => {
   let field = view.state.field(lintState, false)
   if (!field || !field.panel)
-    view.dispatch({effects: maybeEnableLint(view.state, [togglePanel.of(true)], () => LintState.init([], LintPanel.open))})
+    view.dispatch({effects: maybeEnableLint(view.state, [togglePanel.of(true)],
+                                            () => LintState.init([], LintPanel.open, view.state))})
   let panel = getPanel(view, LintPanel.open)
   if (panel) (panel.dom.querySelector(".cm-panel-lint ul") as HTMLElement).focus()
   return true
