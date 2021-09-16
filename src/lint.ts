@@ -311,6 +311,7 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
                                            elt("u", name.slice(keyIndex, keyIndex + 1)),
                                            name.slice(keyIndex + 1)]
       return elt("button", {
+        type: "button",
         class: "cm-diagnosticAction",
         onclick: click,
         onmousedown: click,
@@ -387,6 +388,7 @@ class LintPanel implements Panel {
       onclick
     })
     this.dom = elt("div", {class: "cm-panel-lint"}, this.list, elt("button", {
+      type: "button",
       name: "close",
       "aria-label": this.view.state.phrase("close"),
       onclick: () => closeLintPanel(this.view)
