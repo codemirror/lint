@@ -130,6 +130,12 @@ const lintState = StateField.define<LintState>({
                  EditorView.decorations.from(f, s => s.diagnostics)]
 })
 
+/// Returns the number of active lint diagnostics in the given state.
+export function diagnosticCount(state: EditorState) {
+  let lint = state.field(lintState, false)
+  return lint ? lint.diagnostics.size : 0
+}
+
 const activeMark = Decoration.mark({class: "cm-lintRange cm-lintRange-active"})
 
 function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {

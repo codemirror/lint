@@ -6,6 +6,8 @@
 
 @linter
 
+@diagnosticCount
+
 @forceLinting
 
 @openLintPanel
