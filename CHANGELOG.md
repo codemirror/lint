@@ -1,3 +1,13 @@
+## 0.19.1 (2021-09-17)
+
+### Bug fixes
+
+Prevent decorations that cover just a line break from being invisible by showing a widget instead of range for them.
+
+### New features
+
+The `diagnosticCount` method can now be used to determine whether there are active diagnostics.
+
 ## 0.19.0 (2021-08-11)
 
 ### Breaking changes
