@@ -236,12 +236,12 @@ const lintPlugin = ViewPlugin.fromClass(class {
   }
 
   update(update: ViewUpdate) {
-    if (update.docChanged) {
-      let {delay} = update.state.facet(lintSource)
-      this.lintTime = Date.now() + delay
+    let source = update.state.facet(lintSource)
+    if (update.docChanged || source != update.startState.facet(lintSource)) {
+      this.lintTime = Date.now() + source.delay
       if (!this.set) {
         this.set = true
-        this.timeout = setTimeout(this.run, delay)
+        this.timeout = setTimeout(this.run, source.delay)
       }
     }
   }
