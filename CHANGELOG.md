@@ -1,3 +1,9 @@
+## 0.19.2 (2021-09-29)
+
+### Bug fixes
+
+Fix a bug where reconfiguring the lint source didn't restart linting.
+
 ## 0.19.1 (2021-09-17)
 
 ### Bug fixes
