@@ -17,3 +17,5 @@
 @nextDiagnostic
 
 @setDiagnostics
+
+@lintGutter

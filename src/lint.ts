@@ -1,8 +1,10 @@
 import {EditorView, ViewPlugin, Decoration, DecorationSet,
         WidgetType, ViewUpdate, Command, logException, KeyBinding} from "@codemirror/view"
-import {StateEffect, StateField, Extension, TransactionSpec, EditorState, Facet} from "@codemirror/state"
-import {hoverTooltip} from "@codemirror/tooltip"
+import {Text, StateEffect, StateField, Extension, TransactionSpec, EditorState, Facet} from "@codemirror/state"
+import {hoverTooltip, Tooltip, showTooltip} from "@codemirror/tooltip"
 import {PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/panel"
+import {gutter, GutterMarker} from "@codemirror/gutter"
+import {RangeSet, Range} from "@codemirror/rangeset"
 import elt from "crelt"
 
 /// Describes a problem or hint for a piece of code.
@@ -87,7 +89,8 @@ function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unkno
 }
 
 /// Returns a transaction spec which updates the current set of
-/// diagnostics.
+/// diagnostics, and enables the lint extension if if wasn't already
+/// active.
 export function setDiagnostics(state: EditorState, diagnostics: readonly Diagnostic[]): TransactionSpec {
   return {
     effects: maybeEnableLint(state, [setDiagnosticsEffect.of(diagnostics)])
@@ -156,9 +159,13 @@ function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
     end: stackEnd,
     above: view.state.doc.lineAt(stackStart).to < stackEnd,
     create() {
-      return {dom: elt("ul", {class: "cm-tooltip-lint"}, found.map(d => renderDiagnostic(view, d, false)))}
+      return {dom: diagnosticsTooltip(view, found)}
     }
   }
+}
+
+function diagnosticsTooltip(view: EditorView, diagnostics: readonly Diagnostic[]) {
+  return elt("ul", {class: "cm-tooltip-lint"}, diagnostics.map(d => renderDiagnostic(view, d, false)))
 }
 
 /// Command to open and focus the lint panel.
@@ -495,12 +502,13 @@ class LintPanel implements Panel {
   static open(view: EditorView) { return new LintPanel(view) }
 }
 
+function svg(content: string, attrs = `viewBox="0 0 40 40"`) {
+  return `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" ${attrs}>${encodeURIComponent(content)}</svg>')`
+}
+
 function underline(color: string) {
-  if (typeof btoa != "function") return "none"
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="6" height="3">
-    <path d="m0 3 l2 -2 l1 0 l2 2 l1 0" stroke="${color}" fill="none" stroke-width=".7"/>
-  </svg>`
-  return `url('data:image/svg+xml;base64,${btoa(svg)}')`
+  return svg(`<path d="m0 2.5 l2 -1.5 l1 0 l2 1.5 l1 0" stroke="${color}" fill="none" stroke-width=".7"/>`,
+             `width="6" height="3"`)
 }
 
 const baseTheme = EditorView.baseTheme({
@@ -531,7 +539,8 @@ const baseTheme = EditorView.baseTheme({
 
   ".cm-lintRange": {
     backgroundPosition: "left bottom",
-    backgroundRepeat: "repeat-x"
+    backgroundRepeat: "repeat-x",
+    paddingBottom: "0.7px",
   },
 
   ".cm-lintRange-error": { backgroundImage: underline("#d11") },
@@ -596,3 +605,148 @@ const baseTheme = EditorView.baseTheme({
     }
   }
 })
+
+class LintGutterMarker extends GutterMarker {
+  severity: "info" | "warning" | "error"
+  constructor(readonly diagnostics: readonly Diagnostic[]) {
+    super()
+    this.severity = diagnostics.reduce((max, d) => {
+      let s = d.severity
+      return s == "error" || s == "warning" && max == "info" ? s : max
+    }, "info" as "info" | "warning" | "error")
+  }
+
+  toDOM(view: EditorView) {
+    let elt = document.createElement("div")
+    elt.className = "cm-lint-marker cm-lint-marker-" + this.severity
+    elt.onmouseover = () => gutterMarkerMouseOver(view, elt, this.diagnostics)
+    return elt
+  }
+}
+
+const enum Hover {
+  Time = 600,
+  Margin = 10,
+}
+
+function trackHoverOn(view: EditorView, marker: HTMLElement) {
+  let mousemove = (event: MouseEvent) => {
+    let rect = marker.getBoundingClientRect()
+    if (event.clientX > rect.left - Hover.Margin && event.clientX < rect.right + Hover.Margin &&
+        event.clientY > rect.top - Hover.Margin && event.clientY < rect.bottom + Hover.Margin)
+      return
+    for (let target = event.target as Node | null; target; target = target.parentNode) {
+      if (target.nodeType == 1 && (target as HTMLElement).classList.contains("cm-tooltip-lint"))
+        return
+    }
+    window.removeEventListener("mousemove", mousemove)
+    if (view.state.field(lintGutterTooltip))
+      view.dispatch({effects: setLintGutterTooltip.of(null)})
+  }
+  window.addEventListener("mousemove", mousemove)
+}
+
+function gutterMarkerMouseOver(view: EditorView, marker: HTMLElement, diagnostics: readonly Diagnostic[]) {
+  function hovered() {
+    let line = view.visualLineAtHeight(marker.getBoundingClientRect().top + 5)
+    const linePos = view.coordsAtPos(line.from), markerRect = marker.getBoundingClientRect()
+    if (linePos) {
+      view.dispatch({effects: setLintGutterTooltip.of({
+        pos: line.from,
+        above: false,
+        create() {
+          return {
+            dom: diagnosticsTooltip(view, diagnostics),
+            offset: {x: markerRect.left - linePos.left, y: 0}
+          }
+        }
+      })})
+    }
+    marker.onmouseout = marker.onmousemove = null
+    trackHoverOn(view, marker)
+  }
+
+  let hoverTimeout = setTimeout(hovered, Hover.Time)
+  marker.onmouseout = () => {
+    clearTimeout(hoverTimeout)
+    marker.onmouseout = marker.onmousemove = null
+  }
+  marker.onmousemove = () => {
+    clearTimeout(hoverTimeout)
+    hoverTimeout = setTimeout(hovered, Hover.Time)
+  }
+}
+
+function markersForDiagnostics(doc: Text, diagnostics: readonly Diagnostic[]) {
+  let byLine: {[line: number]: Diagnostic[]} = Object.create(null)
+  for (let diagnostic of diagnostics) {
+    let line = doc.lineAt(diagnostic.from)
+    ;(byLine[line.from] || (byLine[line.from] = [])).push(diagnostic)
+  }
+  let markers: Range<GutterMarker>[] = []
+  for (let line in byLine) {
+    markers.push(new LintGutterMarker(byLine[line]).range(+line))
+  }
+  return RangeSet.of(markers, true)
+}
+
+const lintGutterExtension = gutter({
+  class: "cm-gutter-lint",
+  markers: view => view.state.field(lintGutterMarkers),
+})
+
+const lintGutterMarkers = StateField.define<RangeSet<GutterMarker>>({
+  create() {
+    return RangeSet.empty
+  },
+  update(markers, tr) {
+    markers = markers.map(tr.changes)
+    for (let effect of tr.effects) if (effect.is(setDiagnosticsEffect)) {
+      markers = markersForDiagnostics(tr.state.doc, effect.value)
+    }
+    return markers
+  }
+})
+
+const setLintGutterTooltip = StateEffect.define<Tooltip | null>()
+
+const lintGutterTooltip = StateField.define<Tooltip | null>({
+  create() { return null },
+  update(tooltip, tr) {
+    if (tooltip && tr.docChanged) tooltip = {...tooltip, pos: tr.changes.mapPos(tooltip.pos)}
+    return tr.effects.reduce((t, e) => e.is(setLintGutterTooltip) ? e.value : t, tooltip)
+  },
+  provide: field => showTooltip.from(field)
+})
+
+const lintGutterTheme = EditorView.baseTheme({
+  ".cm-gutter-lint": {
+    width: "1.4em",
+    "& .cm-gutterElement": {
+      padding: "0 .2em",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+    }
+  },
+  ".cm-lint-marker": {
+    width: "1em",
+    height: "1em",
+  },
+  ".cm-lint-marker-info": {
+    content: svg(`<path fill="#aaf" stroke="#77e" stroke-width="6" stroke-linejoin="round" d="M5 5L35 5L35 35L5 35Z"/>`)
+  },
+  ".cm-lint-marker-warning": {
+    content: svg(`<path fill="#fe8" stroke="#fd7" stroke-width="6" stroke-linejoin="round" d="M20 6L37 35L3 35Z"/>`),
+  },
+  ".cm-lint-marker-error:before": {
+    content: svg(`<circle cx="20" cy="20" r="15" fill="#f87" stroke="#f43" stroke-width="6"/>`)
+  },
+})
+
+/// Returns an extension that installs a gutter showing markers for
+/// each line that has diagnostics, which can be hovered over to see
+/// the diagnostics.
+export function lintGutter(): Extension {
+  return [lintGutterMarkers, lintGutterExtension, lintGutterTheme, lintGutterTooltip]
+}
