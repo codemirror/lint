@@ -1,3 +1,11 @@
+## 0.19.3 (2021-11-09)
+
+### New features
+
+Export a function `lintGutter` which returns an extension that installs a gutter marking lines with diagnostics.
+
+The package now exports the effect used to update the diagnostics (`setDiagnosticsEffect`).
+
 ## 0.19.2 (2021-09-29)
 
 ### Bug fixes
