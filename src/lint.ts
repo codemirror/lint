@@ -97,7 +97,9 @@ export function setDiagnostics(state: EditorState, diagnostics: readonly Diagnos
   }
 }
 
-const setDiagnosticsEffect = StateEffect.define<readonly Diagnostic[]>()
+/// The state effect that updates the set of active diagnostics. Can
+/// be useful when writing an extension that needs to track these.
+export const setDiagnosticsEffect = StateEffect.define<readonly Diagnostic[]>()
 
 const togglePanel = StateEffect.define<boolean>()
 

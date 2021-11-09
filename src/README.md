@@ -18,4 +18,6 @@
 
 @setDiagnostics
 
+@setDiagnosticsEffect
+
 @lintGutter
