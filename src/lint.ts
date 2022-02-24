@@ -1,6 +1,15 @@
 import {EditorView, ViewPlugin, Decoration, DecorationSet,
         WidgetType, ViewUpdate, Command, logException, KeyBinding} from "@codemirror/view"
-import {Text, StateEffect, StateField, Extension, TransactionSpec, EditorState, Facet} from "@codemirror/state"
+import {
+  Text,
+  StateEffect,
+  StateField,
+  Extension,
+  TransactionSpec,
+  EditorState,
+  Facet,
+  combineConfig
+} from "@codemirror/state"
 import {hoverTooltip, Tooltip, showTooltip} from "@codemirror/tooltip"
 import {PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/panel"
 import {gutter, GutterMarker} from "@codemirror/gutter"
@@ -36,6 +45,13 @@ export interface Action {
   /// given the diagnostic's _current_ position, which may have
   /// changed since the creation of the diagnostic due to editing.
   apply: (view: EditorView, from: number, to: number) => void
+}
+
+export interface LintGutterConfig {
+  /// The delay before showing a tooltip when hovering over a lint gutter marker.
+  hoverTime?: number
+  /// The margin within which a tooltip will continue to be shown when moving out of a lint gutter marker.
+  hoverMargin?: number
 }
 
 class SelectedDiagnostic {
@@ -631,10 +647,11 @@ const enum Hover {
 }
 
 function trackHoverOn(view: EditorView, marker: HTMLElement) {
+  let {hoverMargin} = view.state.facet(lintGutterConfig)
   let mousemove = (event: MouseEvent) => {
     let rect = marker.getBoundingClientRect()
-    if (event.clientX > rect.left - Hover.Margin && event.clientX < rect.right + Hover.Margin &&
-        event.clientY > rect.top - Hover.Margin && event.clientY < rect.bottom + Hover.Margin)
+    if (event.clientX > rect.left - hoverMargin && event.clientX < rect.right + hoverMargin &&
+        event.clientY > rect.top - hoverMargin && event.clientY < rect.bottom + hoverMargin)
       return
     for (let target = event.target as Node | null; target; target = target.parentNode) {
       if (target.nodeType == 1 && (target as HTMLElement).classList.contains("cm-tooltip-lint"))
@@ -667,14 +684,16 @@ function gutterMarkerMouseOver(view: EditorView, marker: HTMLElement, diagnostic
     trackHoverOn(view, marker)
   }
 
-  let hoverTimeout = setTimeout(hovered, Hover.Time)
+  let {hoverTime} = view.state.facet(lintGutterConfig)
+
+  let hoverTimeout = setTimeout(hovered, hoverTime)
   marker.onmouseout = () => {
     clearTimeout(hoverTimeout)
     marker.onmouseout = marker.onmousemove = null
   }
   marker.onmousemove = () => {
     clearTimeout(hoverTimeout)
-    hoverTimeout = setTimeout(hovered, Hover.Time)
+    hoverTimeout = setTimeout(hovered, hoverTime)
   }
 }
 
@@ -745,9 +764,18 @@ const lintGutterTheme = EditorView.baseTheme({
   },
 })
 
+const lintGutterConfig = Facet.define<LintGutterConfig, Required<LintGutterConfig>>({
+  combine(configs) {
+    return combineConfig(configs, {
+      hoverTime: Hover.Time,
+      hoverMargin: Hover.Margin,
+    });
+  }
+});
+
 /// Returns an extension that installs a gutter showing markers for
 /// each line that has diagnostics, which can be hovered over to see
 /// the diagnostics.
-export function lintGutter(): Extension {
-  return [lintGutterMarkers, lintGutterExtension, lintGutterTheme, lintGutterTooltip]
+export function lintGutter(config: LintGutterConfig = {}): Extension {
+  return [lintGutterConfig.of(config), lintGutterMarkers, lintGutterExtension, lintGutterTheme, lintGutterTooltip]
 }
