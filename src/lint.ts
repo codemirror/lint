@@ -732,15 +732,12 @@ const lintGutterTheme = EditorView.baseTheme({
   ".cm-gutter-lint": {
     width: "1.4em",
     "& .cm-gutterElement": {
-      padding: "0 .2em",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
+      padding: ".2em"
     }
   },
   ".cm-lint-marker": {
     width: "1em",
-    height: "1em",
+    height: "1em"
   },
   ".cm-lint-marker-info": {
     content: svg(`<path fill="#aaf" stroke="#77e" stroke-width="6" stroke-linejoin="round" d="M5 5L35 5L35 35L5 35Z"/>`)
