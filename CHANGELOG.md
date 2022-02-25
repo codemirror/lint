@@ -1,3 +1,9 @@
+## 0.19.5 (2022-02-25)
+
+### Bug fixes
+
+Make sure the lint gutter tooltips are positioned under their icon, even when the line is wrapped.
+
 ## 0.19.4 (2022-02-25)
 
 ### Bug fixes
