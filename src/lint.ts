@@ -47,7 +47,7 @@ export interface Action {
   apply: (view: EditorView, from: number, to: number) => void
 }
 
-export interface LintGutterConfig {
+interface LintGutterConfig {
   /// The delay before showing a tooltip when hovering over a lint gutter marker.
   hoverTime?: number
 }
