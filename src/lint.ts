@@ -661,6 +661,7 @@ function gutterMarkerMouseOver(view: EditorView, marker: HTMLElement, diagnostic
     if (linePos) {
       view.dispatch({effects: setLintGutterTooltip.of({
         pos: line.from,
+        end: line.to,
         above: false,
         create() {
           return {
