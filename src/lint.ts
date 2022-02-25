@@ -50,8 +50,6 @@ export interface Action {
 export interface LintGutterConfig {
   /// The delay before showing a tooltip when hovering over a lint gutter marker.
   hoverTime?: number
-  /// The margin within which a tooltip will continue to be shown when moving out of a lint gutter marker.
-  hoverMargin?: number
 }
 
 class SelectedDiagnostic {
@@ -647,11 +645,10 @@ const enum Hover {
 }
 
 function trackHoverOn(view: EditorView, marker: HTMLElement) {
-  let {hoverMargin} = view.state.facet(lintGutterConfig)
   let mousemove = (event: MouseEvent) => {
     let rect = marker.getBoundingClientRect()
-    if (event.clientX > rect.left - hoverMargin && event.clientX < rect.right + hoverMargin &&
-        event.clientY > rect.top - hoverMargin && event.clientY < rect.bottom + hoverMargin)
+    if (event.clientX > rect.left - Hover.Time && event.clientX < rect.right + Hover.Time &&
+        event.clientY > rect.top - Hover.Time && event.clientY < rect.bottom + Hover.Time)
       return
     for (let target = event.target as Node | null; target; target = target.parentNode) {
       if (target.nodeType == 1 && (target as HTMLElement).classList.contains("cm-tooltip-lint"))
@@ -768,7 +765,6 @@ const lintGutterConfig = Facet.define<LintGutterConfig, Required<LintGutterConfi
   combine(configs) {
     return combineConfig(configs, {
       hoverTime: Hover.Time,
-      hoverMargin: Hover.Margin,
     });
   }
 });
