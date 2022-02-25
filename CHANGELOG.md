@@ -1,3 +1,13 @@
+## 0.19.4 (2022-02-25)
+
+### Bug fixes
+
+Fix an issue where an outdated marker could stick around on the lint gutter after all diagnostics were removed.
+
+### New features
+
+Add a `hoverTime` option to the lint gutter. Change default hover time to 300
+
 ## 0.19.3 (2021-11-09)
 
 ### New features
