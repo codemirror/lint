@@ -632,7 +632,7 @@ class LintGutterMarker extends GutterMarker {
 }
 
 const enum Hover {
-  Time = 600,
+  Time = 300,
   Margin = 10,
 }
 
