@@ -1,6 +1,7 @@
 import {EditorView, ViewPlugin, Decoration, DecorationSet,
         WidgetType, ViewUpdate, Command, logException, KeyBinding} from "@codemirror/view"
-import {Text, StateEffect, StateField, Extension, TransactionSpec, EditorState, Facet} from "@codemirror/state"
+import {Text, StateEffect, StateField, Extension, TransactionSpec,
+        EditorState, Facet, combineConfig} from "@codemirror/state"
 import {hoverTooltip, Tooltip, showTooltip} from "@codemirror/tooltip"
 import {PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/panel"
 import {gutter, GutterMarker} from "@codemirror/gutter"
@@ -36,6 +37,11 @@ export interface Action {
   /// given the diagnostic's _current_ position, which may have
   /// changed since the creation of the diagnostic due to editing.
   apply: (view: EditorView, from: number, to: number) => void
+}
+
+interface LintGutterConfig {
+  /// The delay before showing a tooltip when hovering over a lint gutter marker.
+  hoverTime?: number
 }
 
 class SelectedDiagnostic {
@@ -667,14 +673,16 @@ function gutterMarkerMouseOver(view: EditorView, marker: HTMLElement, diagnostic
     trackHoverOn(view, marker)
   }
 
-  let hoverTimeout = setTimeout(hovered, Hover.Time)
+  let {hoverTime} = view.state.facet(lintGutterConfig)
+
+  let hoverTimeout = setTimeout(hovered, hoverTime)
   marker.onmouseout = () => {
     clearTimeout(hoverTimeout)
     marker.onmouseout = marker.onmousemove = null
   }
   marker.onmousemove = () => {
     clearTimeout(hoverTimeout)
-    hoverTimeout = setTimeout(hovered, Hover.Time)
+    hoverTimeout = setTimeout(hovered, hoverTime)
   }
 }
 
@@ -745,9 +753,17 @@ const lintGutterTheme = EditorView.baseTheme({
   },
 })
 
+const lintGutterConfig = Facet.define<LintGutterConfig, Required<LintGutterConfig>>({
+  combine(configs) {
+    return combineConfig(configs, {
+      hoverTime: Hover.Time,
+    });
+  }
+});
+
 /// Returns an extension that installs a gutter showing markers for
 /// each line that has diagnostics, which can be hovered over to see
 /// the diagnostics.
-export function lintGutter(): Extension {
-  return [lintGutterMarkers, lintGutterExtension, lintGutterTheme, lintGutterTooltip]
+export function lintGutter(config: LintGutterConfig = {}): Extension {
+  return [lintGutterConfig.of(config), lintGutterMarkers, lintGutterExtension, lintGutterTheme, lintGutterTooltip]
 }
