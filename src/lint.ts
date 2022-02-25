@@ -639,8 +639,8 @@ const enum Hover {
 function trackHoverOn(view: EditorView, marker: HTMLElement) {
   let mousemove = (event: MouseEvent) => {
     let rect = marker.getBoundingClientRect()
-    if (event.clientX > rect.left - Hover.Time && event.clientX < rect.right + Hover.Time &&
-        event.clientY > rect.top - Hover.Time && event.clientY < rect.bottom + Hover.Time)
+    if (event.clientX > rect.left - Hover.Margin && event.clientX < rect.right + Hover.Margin &&
+        event.clientY > rect.top - Hover.Margin && event.clientY < rect.bottom + Hover.Margin)
       return
     for (let target = event.target as Node | null; target; target = target.parentNode) {
       if (target.nodeType == 1 && (target as HTMLElement).classList.contains("cm-tooltip-lint"))
