@@ -1,3 +1,9 @@
+## 0.19.6 (2022-03-04)
+
+### Bug fixes
+
+Fix a bug where hovering over the icons in the lint gutter would sometimes fail to show a tooltip or show the tooltip for another line.
+
 ## 0.19.5 (2022-02-25)
 
 ### Bug fixes
