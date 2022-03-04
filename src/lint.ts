@@ -655,7 +655,7 @@ function trackHoverOn(view: EditorView, marker: HTMLElement) {
 
 function gutterMarkerMouseOver(view: EditorView, marker: HTMLElement, diagnostics: readonly Diagnostic[]) {
   function hovered() {
-    let line = view.visualLineAtHeight(marker.getBoundingClientRect().top + 5 - view.documentTop)
+    let line = view.elementAtHeight(marker.getBoundingClientRect().top + 5 - view.documentTop)
     const linePos = view.coordsAtPos(line.from)
     if (linePos) {
       view.dispatch({effects: setLintGutterTooltip.of({
