@@ -35,7 +35,7 @@ export interface Action {
   name: string
   /// The function to call when the user activates this action. Is
   /// given the diagnostic's _current_ position, which may have
-  /// changed since the creation of the diagnostic due to editing.
+  /// changed since the creation of the diagnostic, due to editing.
   apply: (view: EditorView, from: number, to: number) => void
 }
 
