@@ -1,9 +1,9 @@
 import {EditorView, ViewPlugin, Decoration, DecorationSet,
         WidgetType, ViewUpdate, Command, logException, KeyBinding,
-        hoverTooltip, Tooltip, showTooltip} from "@codemirror/view"
+        hoverTooltip, Tooltip, showTooltip,
+        PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/view"
 import {Text, StateEffect, StateField, Extension, TransactionSpec,
         EditorState, Facet, combineConfig} from "@codemirror/state"
-import {PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/panel"
 import {gutter, GutterMarker} from "@codemirror/gutter"
 import {RangeSet, Range} from "@codemirror/rangeset"
 import elt from "crelt"
