@@ -3,8 +3,7 @@ import {EditorView, ViewPlugin, Decoration, DecorationSet,
         hoverTooltip, Tooltip, showTooltip, gutter, GutterMarker,
         PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/view"
 import {Text, StateEffect, StateField, Extension, TransactionSpec,
-        EditorState, Facet, combineConfig} from "@codemirror/state"
-import {RangeSet, Range} from "@codemirror/rangeset"
+        EditorState, Facet, combineConfig, RangeSet, Range} from "@codemirror/state"
 import elt from "crelt"
 
 /// Describes a problem or hint for a piece of code.

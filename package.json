@@ -26,7 +26,6 @@
   "sideEffects": false,
   "license": "MIT",
   "dependencies": {
-    "@codemirror/rangeset": "^0.19.1",
     "@codemirror/state": "^0.19.4",
     "@codemirror/view": "^0.19.22",
     "crelt": "^1.0.5"
