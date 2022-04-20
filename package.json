@@ -1,6 +1,6 @@
 {
   "name": "@codemirror/lint",
-  "version": "0.19.6",
+  "version": "0.20.0",
   "description": "Linting support for the CodeMirror code editor",
   "scripts": {
     "test": "cm-runtests",
@@ -26,8 +26,8 @@
   "sideEffects": false,
   "license": "MIT",
   "dependencies": {
-    "@codemirror/state": "^0.19.4",
-    "@codemirror/view": "^0.19.22",
+    "@codemirror/state": "^0.20.0",
+    "@codemirror/view": "^0.20.0",
     "crelt": "^1.0.5"
   },
   "devDependencies": {
