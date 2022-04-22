@@ -2,7 +2,7 @@ import {EditorView, ViewPlugin, Decoration, DecorationSet,
         WidgetType, ViewUpdate, Command, logException, KeyBinding,
         hoverTooltip, Tooltip, showTooltip, gutter, GutterMarker,
         PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/view"
-import {Text, StateEffect, StateField, Extension, TransactionSpec,
+import {Text, StateEffect, StateField, Extension, TransactionSpec, Transaction,
         EditorState, Facet, combineConfig, RangeSet, Range} from "@codemirror/state"
 import elt from "crelt"
 
@@ -78,6 +78,10 @@ function findDiagnostic(diagnostics: DecorationSet, diagnostic: Diagnostic | nul
   return found
 }
 
+function hideTooltip(tr: Transaction, tooltip: Tooltip) {
+  return !!(tr.effects.some(e => e.is(setDiagnosticsEffect)) || tr.changes.touchesRange(tooltip.pos))
+}
+
 function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unknown>[]) {
   return state.field(lintState, false) ? effects : effects.concat(StateEffect.appendConfig.of([
     lintState,
@@ -87,7 +91,7 @@ function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unkno
         activeMark.range(selected.from, selected.to)
       ])
     }),
-    hoverTooltip(lintTooltip, {hideOnChange: true}),
+    hoverTooltip(lintTooltip, {hideOn: hideTooltip}),
     baseTheme
   ]))
 }
@@ -720,7 +724,8 @@ const setLintGutterTooltip = StateEffect.define<Tooltip | null>()
 const lintGutterTooltip = StateField.define<Tooltip | null>({
   create() { return null },
   update(tooltip, tr) {
-    if (tooltip && tr.docChanged) tooltip = {...tooltip, pos: tr.changes.mapPos(tooltip.pos)}
+    if (tooltip && tr.docChanged)
+      tooltip = hideTooltip(tr, tooltip) ? null : {...tooltip, pos: tr.changes.mapPos(tooltip.pos)}
     return tr.effects.reduce((t, e) => e.is(setLintGutterTooltip) ? e.value : t, tooltip)
   },
   provide: field => showTooltip.from(field)
