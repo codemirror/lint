@@ -1,3 +1,9 @@
+## 0.20.1 (2022-04-22)
+
+### Bug fixes
+
+Hide lint tooltips when the document is changed.
+
 ## 0.20.0 (2022-04-20)
 
 ### Breaking changes
