@@ -37,6 +37,15 @@ export interface Action {
   apply: (view: EditorView, from: number, to: number) => void
 }
 
+interface LintConfig {
+  /// Time to wait (in milliseconds) after a change before running
+  /// the linter. Defaults to 750ms.
+  delay?: number
+  /// Controls whether hovering over a linter decoration displays a
+  /// tooltip. Defaults to true.
+  showTooltips?: boolean
+}
+
 interface LintGutterConfig {
   /// The delay before showing a tooltip when hovering over a lint gutter marker.
   hoverTime?: number
@@ -152,6 +161,8 @@ export function diagnosticCount(state: EditorState) {
 const activeMark = Decoration.mark({class: "cm-lintRange cm-lintRange-active"})
 
 function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
+  if (!view.state.facet(lintConfig).showTooltips) return null
+
   let {diagnostics} = view.state.field(lintState)
   let found: Diagnostic[] = [], stackStart = 2e8, stackEnd = 0
   diagnostics.between(pos - (side < 0 ? 1 : 0), pos + (side > 0 ? 1 : 0), (from, to, {spec}) => {
@@ -273,9 +284,20 @@ const lintPlugin = ViewPlugin.fromClass(class {
   }
 })
 
+const DefaultDelay = 750
+
+const lintConfig = Facet.define<LintConfig, Required<LintConfig>>({
+  combine(configs) {
+    return combineConfig(configs, {
+      delay: DefaultDelay,
+      showTooltips: true
+    })
+  }
+});
+
 const lintSource = Facet.define<{source: LintSource, delay: number}, {sources: readonly LintSource[], delay: number}>({
   combine(input) {
-    return {sources: input.map(i => i.source), delay: input.length ? Math.max(...input.map(i => i.delay)) : 750}
+    return {sources: input.map(i => i.source), delay: input.length ? Math.max(...input.map(i => i.delay)) : DefaultDelay}
   },
   enables: lintPlugin
 })
@@ -285,13 +307,12 @@ const lintSource = Facet.define<{source: LintSource, delay: number}, {sources: r
 /// editor is idle (after its content changed).
 export function linter(
   source: LintSource,
-  config: {
-    /// Time to wait (in milliseconds) after a change before running
-    /// the linter. Defaults to 750ms.
-    delay?: number
-  } = {}
+  config: LintConfig = {}
 ): Extension {
-  return lintSource.of({source, delay: config.delay ?? 750})
+  return [
+    lintConfig.of(config),
+    lintSource.of({source, delay: config.delay ?? DefaultDelay})
+  ]
 }
 
 /// Forces any linters [configured](#lint.linter) to run when the
