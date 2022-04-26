@@ -218,7 +218,8 @@ export const lintKeymap: readonly KeyBinding[] = [
   {key: "F8", run: nextDiagnostic}
 ]
 
-type LintSource = (view: EditorView) => readonly Diagnostic[] | Promise<readonly Diagnostic[]>
+/// The type of a function that produces diagnostics.
+export type LintSource = (view: EditorView) => readonly Diagnostic[] | Promise<readonly Diagnostic[]>
 
 const lintPlugin = ViewPlugin.fromClass(class {
   lintTime: number
