@@ -6,6 +6,8 @@
 
 @linter
 
+@LintSource
+
 @diagnosticCount
 
 @forceLinting
