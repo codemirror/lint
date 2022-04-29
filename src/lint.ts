@@ -37,25 +37,29 @@ export interface Action {
   apply: (view: EditorView, from: number, to: number) => void
 }
 
-export enum MarkerType { Code, Gutter }
-
-type DiagnosticFilter = (diagnostics: readonly Diagnostic[], type: MarkerType) => Diagnostic[]
+type DiagnosticFilter = (diagnostics: readonly Diagnostic[]) => Diagnostic[]
 
 interface LintConfig {
   /// Time to wait (in milliseconds) after a change before running
   /// the linter. Defaults to 750ms.
   delay?: number
   /// Optional filter for diagnostics that generate markers in the
-  /// content or gutter
-  markerDiagnosticFilter?: null | DiagnosticFilter,
+  /// content
+  markerFilter?: null | DiagnosticFilter,
   /// Optional filter for diagnostics displayed in a tooltip, which
   /// can also be used to prevent a tooltip appearing
-  tooltipDiagnosticFilter?: null | DiagnosticFilter
+  tooltipFilter?: null | DiagnosticFilter
 }
 
 interface LintGutterConfig {
   /// The delay before showing a tooltip when hovering over a lint gutter marker.
-  hoverTime?: number
+  hoverTime?: number,
+  /// Optional filter for diagnostics that generate markers in the
+  /// gutter
+  markerFilter?: null | DiagnosticFilter,
+  /// Optional filter for diagnostics displayed in a tooltip, which
+  /// can also be used to prevent a tooltip appearing
+  tooltipFilter?: null | DiagnosticFilter
 }
 
 class SelectedDiagnostic {
@@ -70,9 +74,9 @@ class LintState {
   static init(diagnostics: readonly Diagnostic[], panel: PanelConstructor | null, state: EditorState) {
     // Filter the list of diagnostics for which to create markers
     let markedDiagnostics = diagnostics
-    const diagnosticFilter = state.facet(lintConfig).config.markerDiagnosticFilter
+    const diagnosticFilter = state.facet(lintConfig).config.markerFilter
     if (diagnosticFilter) {
-      markedDiagnostics = diagnosticFilter(markedDiagnostics, MarkerType.Code)
+      markedDiagnostics = diagnosticFilter(markedDiagnostics)
     }
 
     let ranges = Decoration.set(markedDiagnostics.map((d: Diagnostic) => {
@@ -186,9 +190,9 @@ function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
     }
   })
 
-  const diagnosticFilter = view.state.facet(lintConfig).config.tooltipDiagnosticFilter
+  const diagnosticFilter = view.state.facet(lintConfig).config.tooltipFilter
   if (diagnosticFilter) {
-    found = diagnosticFilter(found, MarkerType.Code)
+    found = diagnosticFilter(found)
   }
 
   if (!found.length) return null
@@ -314,14 +318,14 @@ function mapDefinedProperty(arr: readonly any[], propName: string) {
   }, [] as any[])
 }
 
-export const lintConfig = Facet.define<{source: LintSource, config: LintConfig}, {sources: readonly LintSource[], config: LintConfig}>({
+const lintConfig = Facet.define<{source: LintSource, config: LintConfig}, {sources: readonly LintSource[], config: LintConfig}>({
   combine(input) {
     return {
       sources: mapDefinedProperty(input, "source"),
       config: combineConfig(mapDefinedProperty(input, "config"), {
         delay: 750,
-        markerDiagnosticFilter: null,
-        tooltipDiagnosticFilter: null
+        markerFilter: null,
+        tooltipFilter: null
       })
     }
   },
@@ -676,9 +680,9 @@ class LintGutterMarker extends GutterMarker {
     elt.className = "cm-lint-marker cm-lint-marker-" + this.severity
 
     let diagnostics = this.diagnostics
-    const diagnosticsFilter = view.state.facet(lintConfig).config.tooltipDiagnosticFilter
+    const diagnosticsFilter = view.state.facet(lintGutterConfig).tooltipFilter
     if (diagnosticsFilter) {
-      diagnostics = diagnosticsFilter(diagnostics, MarkerType.Gutter)
+      diagnostics = diagnosticsFilter(diagnostics)
     }
 
     if (diagnostics.length) {
@@ -768,12 +772,12 @@ const lintGutterMarkers = StateField.define<RangeSet<GutterMarker>>({
   },
   update(markers, tr) {
     markers = markers.map(tr.changes)
-    const diagnosticFilter = tr.state.facet(lintConfig).config.markerDiagnosticFilter
+    const diagnosticFilter = tr.state.facet(lintGutterConfig).markerFilter
     for (let effect of tr.effects) {
       if (effect.is(setDiagnosticsEffect)) {
         let diagnostics = effect.value
         if (diagnosticFilter) {
-          diagnostics = diagnosticFilter(diagnostics || [], MarkerType.Gutter);
+          diagnostics = diagnosticFilter(diagnostics || []);
         }
         markers = markersForDiagnostics(tr.state.doc, diagnostics.slice(0));
       }
@@ -820,6 +824,8 @@ const lintGutterConfig = Facet.define<LintGutterConfig, Required<LintGutterConfi
   combine(configs) {
     return combineConfig(configs, {
       hoverTime: Hover.Time,
+      markerFilter: null,
+      tooltipFilter: null
     });
   }
 });
