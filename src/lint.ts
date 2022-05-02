@@ -43,22 +43,22 @@ interface LintConfig {
   /// Time to wait (in milliseconds) after a change before running
   /// the linter. Defaults to 750ms.
   delay?: number
-  /// Optional filter for diagnostics that generate markers in the
-  /// content
+  /// Optional filter to determine which diagnostics produce markers
+  /// in the content.
   markerFilter?: null | DiagnosticFilter,
-  /// Optional filter for diagnostics displayed in a tooltip, which
-  /// can also be used to prevent a tooltip appearing
+  /// Filter applied to a set of diagnostics shown in a tooltip. No
+  /// tooltip will appear if the empty set is returned.
   tooltipFilter?: null | DiagnosticFilter
 }
 
 interface LintGutterConfig {
   /// The delay before showing a tooltip when hovering over a lint gutter marker.
   hoverTime?: number,
-  /// Optional filter for diagnostics that generate markers in the
-  /// gutter
+  /// Optional filter determining which diagnostics show a marker in
+  /// the gutter.
   markerFilter?: null | DiagnosticFilter,
   /// Optional filter for diagnostics displayed in a tooltip, which
-  /// can also be used to prevent a tooltip appearing
+  /// can also be used to prevent a tooltip appearing.
   tooltipFilter?: null | DiagnosticFilter
 }
 
@@ -74,10 +74,9 @@ class LintState {
   static init(diagnostics: readonly Diagnostic[], panel: PanelConstructor | null, state: EditorState) {
     // Filter the list of diagnostics for which to create markers
     let markedDiagnostics = diagnostics
-    const diagnosticFilter = state.facet(lintConfig).config.markerFilter
-    if (diagnosticFilter) {
+    let diagnosticFilter = state.facet(lintConfig).markerFilter
+    if (diagnosticFilter)
       markedDiagnostics = diagnosticFilter(markedDiagnostics)
-    }
 
     let ranges = Decoration.set(markedDiagnostics.map((d: Diagnostic) => {
       // For zero-length ranges or ranges covering only a line break, create a widget
@@ -190,10 +189,8 @@ function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
     }
   })
 
-  const diagnosticFilter = view.state.facet(lintConfig).config.tooltipFilter
-  if (diagnosticFilter) {
-    found = diagnosticFilter(found)
-  }
+  let diagnosticFilter = view.state.facet(lintConfig).tooltipFilter
+  if (diagnosticFilter) found = diagnosticFilter(found)
 
   if (!found.length) return null
 
@@ -260,7 +257,7 @@ const lintPlugin = ViewPlugin.fromClass(class {
   set = true
 
   constructor(readonly view: EditorView) {
-    let {delay} = view.state.facet(lintConfig).config
+    let {delay} = view.state.facet(lintConfig)
     this.lintTime = Date.now() + delay
     this.run = this.run.bind(this)
     this.timeout = setTimeout(this.run, delay)
@@ -285,13 +282,12 @@ const lintPlugin = ViewPlugin.fromClass(class {
   }
 
   update(update: ViewUpdate) {
-    let configAndSource = update.state.facet(lintConfig)
-    let {delay} = configAndSource.config
-    if (update.docChanged || configAndSource != update.startState.facet(lintConfig)) {
-      this.lintTime = Date.now() + delay
+    let config = update.state.facet(lintConfig)
+    if (update.docChanged || config != update.startState.facet(lintConfig)) {
+      this.lintTime = Date.now() + config.delay
       if (!this.set) {
         this.set = true
-        this.timeout = setTimeout(this.run, delay)
+        this.timeout = setTimeout(this.run, config.delay)
       }
     }
   }
@@ -308,21 +304,12 @@ const lintPlugin = ViewPlugin.fromClass(class {
   }
 })
 
-function mapDefinedProperty(arr: readonly any[], propName: string) {
-  return arr.reduce((mapped: any[], obj) => {
-    const propValue = obj[propName];
-    if (propValue !== undefined) {
-      mapped.push(propValue);
-    }
-    return mapped;
-  }, [] as any[])
-}
-
-const lintConfig = Facet.define<{source: LintSource, config: LintConfig}, {sources: readonly LintSource[], config: LintConfig}>({
+const lintConfig = Facet.define<{source: LintSource, config: LintConfig},
+                                Required<LintConfig> & {sources: readonly LintSource[]}>({
   combine(input) {
     return {
-      sources: mapDefinedProperty(input, "source"),
-      config: combineConfig(mapDefinedProperty(input, "config"), {
+      sources: input.map(i => i.source),
+      ...combineConfig(input.map(i => i.config), {
         delay: 750,
         markerFilter: null,
         tooltipFilter: null
@@ -339,9 +326,7 @@ export function linter(
   source: LintSource,
   config: LintConfig = {}
 ): Extension {
-  return [
-    lintConfig.of({source: source, config: config})
-  ]
+  return lintConfig.of({source, config})
 }
 
 /// Forces any linters [configured](#lint.linter) to run when the
@@ -680,14 +665,11 @@ class LintGutterMarker extends GutterMarker {
     elt.className = "cm-lint-marker cm-lint-marker-" + this.severity
 
     let diagnostics = this.diagnostics
-    const diagnosticsFilter = view.state.facet(lintGutterConfig).tooltipFilter
-    if (diagnosticsFilter) {
-      diagnostics = diagnosticsFilter(diagnostics)
-    }
+    let diagnosticsFilter = view.state.facet(lintGutterConfig).tooltipFilter
+    if (diagnosticsFilter) diagnostics = diagnosticsFilter(diagnostics)
 
-    if (diagnostics.length) {
+    if (diagnostics.length)
       elt.onmouseover = () => gutterMarkerMouseOver(view, elt, diagnostics)
-    }
 
     return elt
   }
@@ -772,14 +754,13 @@ const lintGutterMarkers = StateField.define<RangeSet<GutterMarker>>({
   },
   update(markers, tr) {
     markers = markers.map(tr.changes)
-    const diagnosticFilter = tr.state.facet(lintGutterConfig).markerFilter
+    let diagnosticFilter = tr.state.facet(lintGutterConfig).markerFilter
     for (let effect of tr.effects) {
       if (effect.is(setDiagnosticsEffect)) {
         let diagnostics = effect.value
-        if (diagnosticFilter) {
-          diagnostics = diagnosticFilter(diagnostics || []);
-        }
-        markers = markersForDiagnostics(tr.state.doc, diagnostics.slice(0));
+        if (diagnosticFilter)
+          diagnostics = diagnosticFilter(diagnostics || [])
+        markers = markersForDiagnostics(tr.state.doc, diagnostics.slice(0))
       }
     }
     return markers
@@ -826,9 +807,9 @@ const lintGutterConfig = Facet.define<LintGutterConfig, Required<LintGutterConfi
       hoverTime: Hover.Time,
       markerFilter: null,
       tooltipFilter: null
-    });
+    })
   }
-});
+})
 
 /// Returns an extension that installs a gutter showing markers for
 /// each line that has diagnostics, which can be hovered over to see
