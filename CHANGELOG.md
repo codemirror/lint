@@ -1,3 +1,11 @@
+## 0.20.2 (2022-05-02)
+
+### New features
+
+The package now exports the `LintSource` function type.
+
+The new `markerFilter` and `tooltipFilter` options to `linter` and `lintGutter` allow more control over which diagnostics are visible and which have tooltips.
+
 ## 0.20.1 (2022-04-22)
 
 ### Bug fixes
