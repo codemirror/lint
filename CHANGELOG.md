@@ -1,3 +1,9 @@
+## 0.20.3 (2022-05-25)
+
+### New features
+
+Diagnostic objects may now have a `renderMessage` method to render their message to the DOM.
+
 ## 0.20.2 (2022-05-02)
 
 ### New features
