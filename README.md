@@ -1,6 +1,6 @@
 # @codemirror/lint [![NPM version](https://img.shields.io/npm/v/@codemirror/lint.svg)](https://www.npmjs.org/package/@codemirror/lint)
 
-[ [**WEBSITE**](https://codemirror.net/) | [**DOCS**](https://codemirror.net/docs/ref/#lint) | [**ISSUES**](https://github.com/codemirror/codemirror.next/issues) | [**FORUM**](https://discuss.codemirror.net/c/next/) | [**CHANGELOG**](https://github.com/codemirror/lint/blob/main/CHANGELOG.md) ]
+[ [**WEBSITE**](https://codemirror.net/) | [**DOCS**](https://codemirror.net/docs/ref/#lint) | [**ISSUES**](https://github.com/codemirror/dev/issues) | [**FORUM**](https://discuss.codemirror.net/c/next/) | [**CHANGELOG**](https://github.com/codemirror/lint/blob/main/CHANGELOG.md) ]
 
 This package implements linting support for the
 [CodeMirror](https://codemirror.net/) code editor.
