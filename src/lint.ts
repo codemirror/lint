@@ -247,7 +247,7 @@ export const nextDiagnostic: Command = (view: EditorView) => {
 /// - Ctrl-Shift-m (Cmd-Shift-m on macOS): [`openLintPanel`](#lint.openLintPanel)
 /// - F8: [`nextDiagnostic`](#lint.nextDiagnostic)
 export const lintKeymap: readonly KeyBinding[] = [
-  {key: "Mod-Shift-m", run: openLintPanel},
+  {key: "Mod-Shift-m", run: openLintPanel, preventDefault: true},
   {key: "F8", run: nextDiagnostic}
 ]
 
