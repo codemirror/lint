@@ -142,6 +142,7 @@ const togglePanel = StateEffect.define<boolean>()
 
 const movePanelSelection = StateEffect.define<SelectedDiagnostic>()
 
+/// The state field that tracks the set of active diagnostics.
 export const lintState = StateField.define<LintState>({
   create() {
     return new LintState(Decoration.none, null, null)
