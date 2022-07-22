@@ -8,6 +8,8 @@
 
 @LintSource
 
+@lintState
+
 @diagnosticCount
 
 @forceLinting
