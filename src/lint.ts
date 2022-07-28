@@ -172,6 +172,24 @@ const lintState = StateField.define<LintState>({
                  EditorView.decorations.from(f, s => s.diagnostics)]
 })
 
+/// Returns the active lint diagnostics in the given state.
+export function activeDiagnostics(state: EditorState) {
+  const lint = state.field(lintState, false)
+
+  if (!lint) { 
+    return [];
+  }
+
+  const { diagnostics } = lint;
+  const found: Diagnostic[] = [];
+
+  diagnostics.between(0, state.doc.length, (_start, _end, {spec}) => {
+    found.push(spec.diagnostic);
+  });
+
+  return found;
+}
+
 /// Returns the number of active lint diagnostics in the given state.
 export function diagnosticCount(state: EditorState) {
   let lint = state.field(lintState, false)
