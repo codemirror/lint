@@ -134,6 +134,21 @@ export function setDiagnostics(state: EditorState, diagnostics: readonly Diagnos
   }
 }
 
+/// Returns all diagnostics attached to the provided state. If `from`
+/// is given, returns only the diagnostics whose range ends at or
+/// after that document position.
+export function getDiagnostics (state: EditorState, from?: number): Diagnostic[] {
+  const allDiagnostics: Diagnostic[] = []
+  const cursor = state.field(lintState).diagnostics.iter(from)
+
+  while (cursor.value !== null) {
+    allDiagnostics.push(cursor.value.spec.diagnostic)
+    cursor.next()
+  }
+
+  return allDiagnostics
+}
+
 /// The state effect that updates the set of active diagnostics. Can
 /// be useful when writing an extension that needs to track these.
 export const setDiagnosticsEffect = StateEffect.define<readonly Diagnostic[]>()
