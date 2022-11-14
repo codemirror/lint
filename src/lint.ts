@@ -820,3 +820,15 @@ const lintGutterConfig = Facet.define<LintGutterConfig, Required<LintGutterConfi
 export function lintGutter(config: LintGutterConfig = {}): Extension {
   return [lintGutterConfig.of(config), lintGutterMarkers, lintGutterExtension, lintGutterTheme, lintGutterTooltip]
 }
+
+/// Iterate over the marked diagnostics for the given editor state,
+/// calling `f` for each of them. Note that, if the document changed
+/// since the diagnostics werecreated, the `Diagnostic` object will
+/// hold the original outdated position, whereas the `to` and `from`
+/// arguments hold the diagnostic's current position.
+export function forEachDiagnostic(state: EditorState, f: (d: Diagnostic, from: number, to: number) => void) {
+  let lState = state.field(lintState, false)
+  if (lState && lState.diagnostics.size)
+    for (let iter = RangeSet.iter([lState.diagnostics]); iter.value; iter.next())
+      f(iter.value.spec.diagnostic, iter.from, iter.to)
+}
