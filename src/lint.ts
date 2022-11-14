@@ -799,7 +799,7 @@ const lintGutterTheme = EditorView.baseTheme({
   ".cm-lint-marker-warning": {
     content: svg(`<path fill="#fe8" stroke="#fd7" stroke-width="6" stroke-linejoin="round" d="M20 6L37 35L3 35Z"/>`),
   },
-  ".cm-lint-marker-error:before": {
+  ".cm-lint-marker-error": {
     content: svg(`<circle cx="20" cy="20" r="15" fill="#f87" stroke="#f43" stroke-width="6"/>`)
   },
 })
