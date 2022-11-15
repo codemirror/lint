@@ -823,7 +823,7 @@ export function lintGutter(config: LintGutterConfig = {}): Extension {
 
 /// Iterate over the marked diagnostics for the given editor state,
 /// calling `f` for each of them. Note that, if the document changed
-/// since the diagnostics werecreated, the `Diagnostic` object will
+/// since the diagnostics were created, the `Diagnostic` object will
 /// hold the original outdated position, whereas the `to` and `from`
 /// arguments hold the diagnostic's current position.
 export function forEachDiagnostic(state: EditorState, f: (d: Diagnostic, from: number, to: number) => void) {
