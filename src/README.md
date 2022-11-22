@@ -22,4 +22,6 @@
 
 @setDiagnosticsEffect
 
+@forEachDiagnostic
+
 @lintGutter
