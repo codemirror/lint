@@ -576,7 +576,8 @@ const baseTheme = EditorView.baseTheme({
     backgroundColor: "#444",
     color: "white",
     borderRadius: "3px",
-    marginLeft: "8px"
+    marginLeft: "8px",
+    cursor: "pointer"
   },
 
   ".cm-diagnosticSource": {
