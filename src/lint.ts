@@ -360,8 +360,10 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
     "li", {class: "cm-diagnostic cm-diagnostic-" + diagnostic.severity},
     elt("span", {class: "cm-diagnosticText"}, diagnostic.renderMessage ? diagnostic.renderMessage() : diagnostic.message),
     diagnostic.actions?.map((action, i) => {
-      let click = (e: Event) => {
+      let fired = false, click = (e: Event) => {
         e.preventDefault()
+        if (fired) return
+        fired = true
         let found = findDiagnostic(view.state.field(lintState).diagnostics, diagnostic)
         if (found) action.apply(view, found.from, found.to)
       }
