@@ -1,3 +1,11 @@
+## 6.1.1 (2023-02-15)
+
+### Bug fixes
+
+Give lint action buttons a pointer cursor style.
+
+Fix a bug that caused diagnostic action callbacks to be called twice when their button was clicked.
+
 ## 6.1.0 (2022-11-15)
 
 ### New features
