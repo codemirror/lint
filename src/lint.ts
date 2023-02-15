@@ -373,7 +373,6 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
         type: "button",
         class: "cm-diagnosticAction",
         onclick: click,
-        onmousedown: click,
         "aria-label": ` Action: ${name}${keyIndex < 0 ? "" : ` (access key "${keys[i]})"`}.`
       }, nameElt)
     }),
