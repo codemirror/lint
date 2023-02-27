@@ -1,3 +1,9 @@
+## 6.2.0 (2023-02-27)
+
+### New features
+
+The new `needsRefresh` option to `linter` makes it possible to cause linting to be recalculated for non-document state changes.
+
 ## 6.1.1 (2023-02-15)
 
 ### Bug fixes
