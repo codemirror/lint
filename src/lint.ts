@@ -46,6 +46,10 @@ interface LintConfig {
   /// Time to wait (in milliseconds) after a change before running
   /// the linter. Defaults to 750ms.
   delay?: number
+  /// Optional predicate that can be used to indicate when diagnostics
+  /// need to be recomputed. Linting is always re-done on document
+  /// changes.
+  needsRefresh?: null | ((update: ViewUpdate) => boolean)
   /// Optional filter to determine which diagnostics produce markers
   /// in the content.
   markerFilter?: null | DiagnosticFilter,
@@ -286,7 +290,8 @@ const lintPlugin = ViewPlugin.fromClass(class {
 
   update(update: ViewUpdate) {
     let config = update.state.facet(lintConfig)
-    if (update.docChanged || config != update.startState.facet(lintConfig)) {
+    if (update.docChanged || config != update.startState.facet(lintConfig) ||
+        config.needsRefresh && config.needsRefresh(update)) {
       this.lintTime = Date.now() + config.delay
       if (!this.set) {
         this.set = true
@@ -315,7 +320,10 @@ const lintConfig = Facet.define<{source: LintSource, config: LintConfig},
       ...combineConfig(input.map(i => i.config), {
         delay: 750,
         markerFilter: null,
-        tooltipFilter: null
+        tooltipFilter: null,
+        needsRefresh: null
+      }, {
+        needsRefresh: (a, b) => !a ? b : !b ? a : u => a(u) || b(u)
       })
     }
   },
