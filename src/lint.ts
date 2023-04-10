@@ -116,17 +116,7 @@ function hideTooltip(tr: Transaction, tooltip: Tooltip) {
 }
 
 function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unknown>[]) {
-  return state.field(lintState, false) ? effects : effects.concat(StateEffect.appendConfig.of([
-    lintState,
-    EditorView.decorations.compute([lintState], state => {
-      let {selected, panel} = state.field(lintState)
-      return !selected || !panel || selected.from == selected.to ? Decoration.none : Decoration.set([
-        activeMark.range(selected.from, selected.to)
-      ])
-    }),
-    hoverTooltip(lintTooltip, {hideOn: hideTooltip}),
-    baseTheme
-  ]))
+  return state.field(lintState, false) ? effects : effects.concat(StateEffect.appendConfig.of(lintExtensions))
 }
 
 /// Returns a transaction spec which updates the current set of
@@ -326,8 +316,7 @@ const lintConfig = Facet.define<{source: LintSource, config: LintConfig},
         needsRefresh: (a, b) => !a ? b : !b ? a : u => a(u) || b(u)
       })
     }
-  },
-  enables: lintPlugin
+  }
 })
 
 /// Given a diagnostic source, this function returns an extension that
@@ -337,7 +326,11 @@ export function linter(
   source: LintSource,
   config: LintConfig = {}
 ): Extension {
-  return lintConfig.of({source, config})
+  return [
+    lintConfig.of({source, config}),
+    lintPlugin,
+    lintExtensions
+  ]
 }
 
 /// Forces any linters [configured](#lint.linter) to run when the
@@ -814,6 +807,18 @@ const lintGutterTheme = EditorView.baseTheme({
     content: svg(`<circle cx="20" cy="20" r="15" fill="#f87" stroke="#f43" stroke-width="6"/>`)
   },
 })
+
+const lintExtensions = [
+  lintState,
+  EditorView.decorations.compute([lintState], state => {
+    let {selected, panel} = state.field(lintState)
+    return !selected || !panel || selected.from == selected.to ? Decoration.none : Decoration.set([
+      activeMark.range(selected.from, selected.to)
+    ])
+  }),
+  hoverTooltip(lintTooltip, {hideOn: hideTooltip}),
+  baseTheme
+]
 
 const lintGutterConfig = Facet.define<LintGutterConfig, Required<LintGutterConfig>>({
   combine(configs) {
