@@ -1,3 +1,9 @@
+## 6.2.1 (2023-04-13)
+
+### Bug fixes
+
+The `linter` function now eagerly includes all lint-related extensions, rather than appending them to the configuration as-needed, so that turning off linting by clearing the compartment that contains it works properly.
+
 ## 6.2.0 (2023-02-27)
 
 ### New features
