@@ -125,10 +125,6 @@ function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unkno
   ]))
 }
 
-export function lintPanel(config?: LintPanelConfig): Extension {
-  return config ? [lintPanelConfigFacet.of(config), []] : []
-}
-
 /// Returns a transaction spec which updates the current set of
 /// diagnostics, and enables the lint extension if if wasn't already
 /// active.
@@ -164,7 +160,7 @@ const lintState = StateField.define<LintState>({
       if (effect.is(setDiagnosticsEffect)) {
         value = LintState.init(effect.value, value.panel, tr.state)
       } else if (effect.is(togglePanel)) {
-        value = new LintState(value.diagnostics, effect.value ? createLintPanel : null, value.selected)
+        value = new LintState(value.diagnostics, effect.value ? LintPanel.open : null, value.selected)
       } else if (effect.is(movePanelSelection)) {
         value = new LintState(value.diagnostics, value.panel, effect.value)
       }
@@ -220,8 +216,8 @@ export const openLintPanel: Command = (view: EditorView) => {
   let field = view.state.field(lintState, false)
   if (!field || !field.panel)
     view.dispatch({effects: maybeEnableLint(view.state, [togglePanel.of(true)])})
-  let panel = getPanel(view, createLintPanel)
-  if (panel) (panel.dom.querySelector(".cm-panel-lint ul") as HTMLElement)?.focus()
+  let panel = getPanel(view, LintPanel.open)
+  if (panel) (panel.dom.querySelector(".cm-panel-lint ul") as HTMLElement).focus()
   return true
 }
 
@@ -231,10 +227,6 @@ export const closeLintPanel: Command = (view: EditorView) => {
   if (!field || !field.panel) return false
   view.dispatch({effects: togglePanel.of(false)})
   return true
-}
-
-function createLintPanel(view: EditorView) {
-  return view.state.facet(lintPanelConfigFacet).createPanel(view)
 }
 
 /// Move the selection to the next diagnostic.
@@ -409,10 +401,6 @@ class PanelItem {
   }
 }
 
-interface LintPanelConfig {
-  createPanel?: (view: EditorView) => Panel
-}
-
 class LintPanel implements Panel {
   items: PanelItem[] = []
   dom: HTMLElement
@@ -560,14 +548,6 @@ class LintPanel implements Panel {
 
   static open(view: EditorView) { return new LintPanel(view) }
 }
-
-const lintPanelConfigFacet: Facet<LintPanelConfig, Required<LintPanelConfig>> = Facet.define({
-  combine(configs) {
-    return combineConfig(configs, {
-      createPanel: view => new LintPanel(view)
-    })
-  }
-})
 
 function svg(content: string, attrs = `viewBox="0 0 40 40"`) {
   return `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" ${attrs}>${encodeURIComponent(content)}</svg>')`
