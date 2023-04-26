@@ -37,7 +37,7 @@ export interface Action {
   /// The function to call when the user activates this action. Is
   /// given the diagnostic's _current_ position, which may have
   /// changed since the creation of the diagnostic, due to editing.
-  apply: (view: EditorView, from: number, to: number) => void
+  apply: (view: EditorView, from: number, to: number, event: Event) => void
 }
 
 type DiagnosticFilter = (diagnostics: readonly Diagnostic[]) => Diagnostic[]
@@ -371,7 +371,7 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
       let click = (e: Event) => {
         e.preventDefault()
         let found = findDiagnostic(view.state.field(lintState).diagnostics, diagnostic)
-        if (found) action.apply(view, found.from, found.to)
+        if (found) action.apply(view, found.from, found.to, e)
       }
       let {name} = action, keyIndex = keys[i] ? name.indexOf(keys[i]) : -1
       let nameElt = keyIndex < 0 ? name : [name.slice(0, keyIndex),
@@ -437,7 +437,7 @@ class LintPanel implements Panel {
         let {diagnostic} = this.items[this.selectedIndex], keys = assignKeys(diagnostic.actions)
         for (let i = 0; i < keys.length; i++) if (keys[i].toUpperCase().charCodeAt(0) == event.keyCode) {
           let found = findDiagnostic(this.view.state.field(lintState).diagnostics, diagnostic)
-          if (found) diagnostic.actions![i].apply(view, found.from, found.to)
+          if (found) diagnostic.actions![i].apply(view, found.from, found.to, event)
         }
       } else {
         return
