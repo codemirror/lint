@@ -112,7 +112,8 @@ function findDiagnostic(diagnostics: DecorationSet, diagnostic: Diagnostic | nul
 }
 
 function hideTooltip(tr: Transaction, tooltip: Tooltip) {
-  return !!(tr.effects.some(e => e.is(setDiagnosticsEffect)) || tr.changes.touchesRange(tooltip.pos))
+  let line = tr.startState.doc.lineAt(tooltip.pos)
+  return !!(tr.effects.some(e => e.is(setDiagnosticsEffect)) || tr.changes.touchesRange(line.from, line.to))
 }
 
 function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unknown>[]) {
