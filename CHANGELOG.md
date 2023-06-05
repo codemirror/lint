@@ -1,3 +1,9 @@
+## 6.2.2 (2023-06-05)
+
+### Bug fixes
+
+Make sure lint gutter tooltips are properly closed when the content of their line changes.
+
 ## 6.2.1 (2023-04-13)
 
 ### Bug fixes
