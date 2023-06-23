@@ -18,6 +18,8 @@
 
 @nextDiagnostic
 
+@previousDiagnostic
+
 @setDiagnostics
 
 @setDiagnosticsEffect

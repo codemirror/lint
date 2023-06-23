@@ -237,6 +237,21 @@ export const nextDiagnostic: Command = (view: EditorView) => {
   return true
 }
 
+/// Move the selection to the previous diagnostic.
+export const previousDiagnostic: Command = (view: EditorView) => {
+  let {state} = view, field = state.field(lintState, false)
+  if (!field) return false
+  let sel = state.selection.main
+  let prevFrom: number | undefined, prevTo: number | undefined, lastFrom: number | undefined, lastTo: number | undefined
+  field.diagnostics.between(0, state.doc.length, (from, to) => {
+    if (to < sel.to && (prevFrom == null || prevFrom < from)) { prevFrom = from; prevTo = to }
+    if (lastFrom == null || from > lastFrom) { lastFrom = from; lastTo = to }
+  })
+  if (lastFrom == null || prevFrom == null && lastFrom == sel.from) return false
+  view.dispatch({selection: {anchor: prevFrom ?? lastFrom, head: prevTo ?? lastTo}, scrollIntoView: true})
+  return true
+}
+
 /// A set of default key bindings for the lint functionality.
 ///
 /// - Ctrl-Shift-m (Cmd-Shift-m on macOS): [`openLintPanel`](#lint.openLintPanel)
