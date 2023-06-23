@@ -1,3 +1,9 @@
+## 6.3.0 (2023-06-23)
+
+### New features
+
+A new `previousDiagnostic` command can be used to move back through the active diagnostics.
+
 ## 6.2.2 (2023-06-05)
 
 ### Bug fixes
