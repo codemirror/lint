@@ -18,6 +18,9 @@ export interface Diagnostic {
   /// The severity of the problem. This will influence how it is
   /// displayed.
   severity: Severity
+  /// When given, add an extra CSS class to parts of the code that
+  /// this diagnostic applies to.
+  markClass?: string
   /// An optional source string indicating where the diagnostic is
   /// coming from. You can put the name of your linter here, if
   /// applicable.
@@ -95,7 +98,7 @@ class LintState {
           diagnostic: d
         }).range(d.from)
         : Decoration.mark({
-          attributes: {class: "cm-lintRange cm-lintRange-" + d.severity},
+          attributes: {class: "cm-lintRange cm-lintRange-" + d.severity + (d.markClass ? " " + d.markClass : "")},
           diagnostic: d
         }).range(d.from, d.to)
     }), true)
