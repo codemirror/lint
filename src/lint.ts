@@ -6,6 +6,8 @@ import {Text, StateEffect, StateField, Extension, TransactionSpec, Transaction,
         EditorState, Facet, combineConfig, RangeSet, Range} from "@codemirror/state"
 import elt from "crelt"
 
+type Severity = "hint" | "info" | "warning" | "error"
+
 /// Describes a problem or hint for a piece of code.
 export interface Diagnostic {
   /// The start position of the relevant text.
@@ -15,7 +17,7 @@ export interface Diagnostic {
   to: number
   /// The severity of the problem. This will influence how it is
   /// displayed.
-  severity: "info" | "warning" | "error"
+  severity: Severity
   /// An optional source string indicating where the diagnostic is
   /// coming from. You can put the name of your linter here, if
   /// applicable.
@@ -587,6 +589,7 @@ const baseTheme = EditorView.baseTheme({
   ".cm-diagnostic-error": { borderLeft: "5px solid #d11" },
   ".cm-diagnostic-warning": { borderLeft: "5px solid orange" },
   ".cm-diagnostic-info": { borderLeft: "5px solid #999" },
+  ".cm-diagnostic-hint": { borderLeft: "5px solid #66d" },
 
   ".cm-diagnosticAction": {
     font: "inherit",
@@ -613,6 +616,7 @@ const baseTheme = EditorView.baseTheme({
   ".cm-lintRange-error": { backgroundImage: underline("#d11") },
   ".cm-lintRange-warning": { backgroundImage: underline("orange") },
   ".cm-lintRange-info": { backgroundImage: underline("#999") },
+  ".cm-lintRange-hint": { backgroundImage: underline("#66d") },
   ".cm-lintRange-active": { backgroundColor: "#ffdd9980" },
 
   ".cm-tooltip-lint": {
@@ -639,6 +643,9 @@ const baseTheme = EditorView.baseTheme({
   },
   ".cm-lintPoint-info": {
     "&:after": { borderBottomColor: "#999" }
+  },
+  ".cm-lintPoint-hint": {
+    "&:after": { borderBottomColor: "#66d" }
   },
 
   ".cm-panel.cm-panel-lint": {
@@ -673,14 +680,16 @@ const baseTheme = EditorView.baseTheme({
   }
 })
 
+function severityWeight(sev: Severity) {
+  return sev == "error" ? 4 : sev == "warning" ? 3 : sev == "info" ? 2 : 1
+}
+
 class LintGutterMarker extends GutterMarker {
-  severity: "info" | "warning" | "error"
+  severity: Severity
   constructor(readonly diagnostics: readonly Diagnostic[]) {
     super()
-    this.severity = diagnostics.reduce((max, d) => {
-      let s = d.severity
-      return s == "error" || s == "warning" && max == "info" ? s : max
-    }, "info" as "info" | "warning" | "error")
+    this.severity = diagnostics.reduce((max, d) => severityWeight(max) < severityWeight(d.severity) ? d.severity : max,
+                                       "hint" as Severity)
   }
 
   toDOM(view: EditorView) {
