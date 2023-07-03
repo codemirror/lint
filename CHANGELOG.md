@@ -1,3 +1,11 @@
+## 6.4.0 (2023-07-03)
+
+### New features
+
+Diagnostics can now use `"hint"` as a severity level.
+
+Diagnostics can now set a `markClass` property to add an additional CSS class to the text marked by the diagnostic.
+
 ## 6.3.0 (2023-06-23)
 
 ### New features
