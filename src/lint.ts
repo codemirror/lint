@@ -211,6 +211,13 @@ function diagnosticsTooltip(view: EditorView, diagnostics: readonly Diagnostic[]
   return elt("ul", {class: "cm-tooltip-lint"}, diagnostics.map(d => renderDiagnostic(view, d, false)))
 }
 
+/// Command to toggle the lint panel open/closed
+export const toggleLintPanel: Command = (view: EditorView) => {
+  let panel = getPanel(view, LintPanel.open)
+  if (panel) return closeLintPanel(view)
+  return openLintPanel(view)
+}
+
 /// Command to open and focus the lint panel.
 export const openLintPanel: Command = (view: EditorView) => {
   let field = view.state.field(lintState, false)
