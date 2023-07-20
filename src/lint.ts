@@ -284,7 +284,7 @@ const lintPlugin = ViewPlugin.fromClass(class {
   run() {
     let now = Date.now()
     if (now < this.lintTime - 10) {
-      setTimeout(this.run, this.lintTime - now)
+      this.timeout = setTimeout(this.run, this.lintTime - now)
     } else {
       this.set = false
       let {state} = this.view, {sources} = state.facet(lintConfig)
