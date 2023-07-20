@@ -290,7 +290,7 @@ const lintPlugin = ViewPlugin.fromClass(class {
       let {state} = this.view, {sources} = state.facet(lintConfig)
       Promise.all(sources.map(source => Promise.resolve(source(this.view)))).then(
         annotations => {
-          let all = annotations.reduce((a, b) => a.concat(b))
+          let all = annotations.reduce((a, b) => a.concat(b), [])
           if (this.view.state.doc == state.doc)
             this.view.dispatch(setDiagnostics(this.view.state, all))
         },
