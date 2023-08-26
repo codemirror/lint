@@ -1,3 +1,9 @@
+## 6.4.1 (2023-08-26)
+
+### Bug fixes
+
+Fix a crash that could occur when a view was reconfigured in a way that removed the lint extension.
+
 ## 6.4.0 (2023-07-03)
 
 ### New features
