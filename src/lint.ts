@@ -529,8 +529,9 @@ class LintPanel implements Panel {
         key: this,
         read: () => ({sel: newSelectedItem!.dom.getBoundingClientRect(), panel: this.list.getBoundingClientRect()}),
         write: ({sel, panel}) => {
-          if (sel.top < panel.top) this.list.scrollTop -= panel.top - sel.top
-          else if (sel.bottom > panel.bottom) this.list.scrollTop += sel.bottom - panel.bottom
+          let scaleY = panel.height / this.list.offsetHeight
+          if (sel.top < panel.top) this.list.scrollTop -= (panel.top - sel.top) / scaleY
+          else if (sel.bottom > panel.bottom) this.list.scrollTop += (sel.bottom - panel.bottom) / scaleY
         }
       })
     } else if (this.selectedIndex < 0) {
