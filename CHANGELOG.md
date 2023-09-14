@@ -1,3 +1,9 @@
+## 6.4.2 (2023-09-14)
+
+### Bug fixes
+
+Make sure scrolling diagnostic into view in the panel works when the editor is scaled.
+
 ## 6.4.1 (2023-08-26)
 
 ### Bug fixes
