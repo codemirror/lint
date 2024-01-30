@@ -45,7 +45,7 @@ export interface Action {
   apply: (view: EditorView, from: number, to: number) => void
 }
 
-type DiagnosticFilter = (diagnostics: readonly Diagnostic[]) => Diagnostic[]
+type DiagnosticFilter = (diagnostics: readonly Diagnostic[], state: EditorState) => Diagnostic[]
 
 interface LintConfig {
   /// Time to wait (in milliseconds) after a change before running
@@ -88,7 +88,7 @@ class LintState {
     let markedDiagnostics = diagnostics
     let diagnosticFilter = state.facet(lintConfig).markerFilter
     if (diagnosticFilter)
-      markedDiagnostics = diagnosticFilter(markedDiagnostics)
+      markedDiagnostics = diagnosticFilter(markedDiagnostics, state)
 
     let ranges = Decoration.set(markedDiagnostics.map((d: Diagnostic) => {
       // For zero-length ranges or ranges covering only a line break, create a widget
@@ -194,7 +194,7 @@ function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
   })
 
   let diagnosticFilter = view.state.facet(lintConfig).tooltipFilter
-  if (diagnosticFilter) found = diagnosticFilter(found)
+  if (diagnosticFilter) found = diagnosticFilter(found, view.state)
 
   if (!found.length) return null
 
@@ -704,7 +704,7 @@ class LintGutterMarker extends GutterMarker {
 
     let diagnostics = this.diagnostics
     let diagnosticsFilter = view.state.facet(lintGutterConfig).tooltipFilter
-    if (diagnosticsFilter) diagnostics = diagnosticsFilter(diagnostics)
+    if (diagnosticsFilter) diagnostics = diagnosticsFilter(diagnostics, view.state)
 
     if (diagnostics.length)
       elt.onmouseover = () => gutterMarkerMouseOver(view, elt, diagnostics)
@@ -797,7 +797,7 @@ const lintGutterMarkers = StateField.define<RangeSet<GutterMarker>>({
       if (effect.is(setDiagnosticsEffect)) {
         let diagnostics = effect.value
         if (diagnosticFilter)
-          diagnostics = diagnosticFilter(diagnostics || [])
+          diagnostics = diagnosticFilter(diagnostics || [], tr.state)
         markers = markersForDiagnostics(tr.state.doc, diagnostics.slice(0))
       }
     }
