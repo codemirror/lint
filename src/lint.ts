@@ -289,7 +289,7 @@ const lintPlugin = ViewPlugin.fromClass(class {
     } else {
       this.set = false
       let {state} = this.view, {sources} = state.facet(lintConfig)
-      Promise.all(sources.map(source => Promise.resolve(source(this.view)))).then(
+      if (sources.length) Promise.all(sources.map(source => Promise.resolve(source(this.view)))).then(
         annotations => {
           let all = annotations.reduce((a, b) => a.concat(b))
           if (this.view.state.doc == state.doc)
@@ -324,11 +324,11 @@ const lintPlugin = ViewPlugin.fromClass(class {
   }
 })
 
-const lintConfig = Facet.define<{source: LintSource, config: LintConfig},
+const lintConfig = Facet.define<{source: LintSource | null, config: LintConfig},
                                 Required<LintConfig> & {sources: readonly LintSource[]}>({
   combine(input) {
     return {
-      sources: input.map(i => i.source),
+      sources: input.map(i => i.source).filter(x => x != null) as readonly LintSource[],
       ...combineConfig(input.map(i => i.config), {
         delay: 750,
         markerFilter: null,
@@ -343,9 +343,10 @@ const lintConfig = Facet.define<{source: LintSource, config: LintConfig},
 
 /// Given a diagnostic source, this function returns an extension that
 /// enables linting with that source. It will be called whenever the
-/// editor is idle (after its content changed).
+/// editor is idle (after its content changed). If `null` is given as
+/// source, this only configures the lint extension.
 export function linter(
-  source: LintSource,
+  source: LintSource | null,
   config: LintConfig = {}
 ): Extension {
   return [
