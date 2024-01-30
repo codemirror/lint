@@ -1,3 +1,15 @@
+## 6.5.0 (2024-01-30)
+
+### Bug fixes
+
+Make lint mark decorations inclusive, so that they are applied even if the marked content is replaced by a widget decoration.
+
+### New features
+
+`linter` can now be called with null as source to only provide a configuration.
+
+`markerFilter` and `tooltipFilter` function now get passed the current editor state.
+
 ## 6.4.2 (2023-09-14)
 
 ### Bug fixes
