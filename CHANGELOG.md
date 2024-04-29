@@ -1,3 +1,9 @@
+## 6.6.0 (2024-04-29)
+
+### New features
+
+The new `hideOn` configuration option can be used to control in what circumstances lint tooltips get hidden by state changes.
+
 ## 6.5.0 (2024-01-30)
 
 ### Bug fixes
