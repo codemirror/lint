@@ -61,6 +61,12 @@ interface LintConfig {
   /// Filter applied to a set of diagnostics shown in a tooltip. No
   /// tooltip will appear if the empty set is returned.
   tooltipFilter?: null | DiagnosticFilter
+  /// Can be used to control what kind of transactions cause lint
+  /// hover tooltips associated with the given document range to be
+  /// hidden. By default any transactions that changes the line
+  /// around the range will hide it. Returning null falls back to this
+  /// behavior.
+  hideOn?: (tr: Transaction, from: number, to: number) => boolean | null
 }
 
 interface LintGutterConfig {
@@ -118,8 +124,11 @@ function findDiagnostic(diagnostics: DecorationSet, diagnostic: Diagnostic | nul
 }
 
 function hideTooltip(tr: Transaction, tooltip: Tooltip) {
+  let from = tooltip.pos, to = tooltip.end || from
+  let result = tr.state.facet(lintConfig).hideOn(tr, from, to)
+  if (result != null) return result
   let line = tr.startState.doc.lineAt(tooltip.pos)
-  return !!(tr.effects.some(e => e.is(setDiagnosticsEffect)) || tr.changes.touchesRange(line.from, line.to))
+  return !!(tr.effects.some(e => e.is(setDiagnosticsEffect)) || tr.changes.touchesRange(line.from, Math.max(line.to, to)))
 }
 
 function maybeEnableLint(state: EditorState, effects: readonly StateEffect<unknown>[]) {
@@ -333,7 +342,8 @@ const lintConfig = Facet.define<{source: LintSource | null, config: LintConfig},
         delay: 750,
         markerFilter: null,
         tooltipFilter: null,
-        needsRefresh: null
+        needsRefresh: null,
+        hideOn: () => null,
       }, {
         needsRefresh: (a, b) => !a ? b : !b ? a : u => a(u) || b(u)
       })
