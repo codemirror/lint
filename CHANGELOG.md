@@ -1,3 +1,9 @@
+## 6.7.0 (2024-04-30)
+
+### New features
+
+The `renderMessage` function is now called with the editor view as first argument.
+
 ## 6.6.0 (2024-04-29)
 
 ### New features
