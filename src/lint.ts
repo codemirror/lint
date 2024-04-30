@@ -29,7 +29,7 @@ export interface Diagnostic {
   message: string
   /// An optional custom rendering function that displays the message
   /// as a DOM node.
-  renderMessage?: () => Node
+  renderMessage?: (view: EditorView) => Node
   /// An optional array of actions that can be taken on this
   /// diagnostic.
   actions?: readonly Action[]
@@ -392,7 +392,7 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
   let keys = inPanel ? assignKeys(diagnostic.actions) : []
   return elt(
     "li", {class: "cm-diagnostic cm-diagnostic-" + diagnostic.severity},
-    elt("span", {class: "cm-diagnosticText"}, diagnostic.renderMessage ? diagnostic.renderMessage() : diagnostic.message),
+    elt("span", {class: "cm-diagnosticText"}, diagnostic.renderMessage ? diagnostic.renderMessage(view) : diagnostic.message),
     diagnostic.actions?.map((action, i) => {
       let fired = false, click = (e: Event) => {
         e.preventDefault()
