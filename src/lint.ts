@@ -292,6 +292,7 @@ const lintPlugin = ViewPlugin.fromClass(class {
   }
 
   run() {
+    clearTimeout(this.timeout)
     let now = Date.now()
     if (now < this.lintTime - 10) {
       this.timeout = setTimeout(this.run, this.lintTime - now)
