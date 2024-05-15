@@ -1,3 +1,9 @@
+## 6.7.1 (2024-05-15)
+
+### Bug fixes
+
+Don't perform an additional superfluous timed lint run after `forceLinting` has been called.
+
 ## 6.7.0 (2024-04-30)
 
 ### New features
