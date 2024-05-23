@@ -1,3 +1,9 @@
+## 6.8.0 (2024-05-23)
+
+### New features
+
+The new `autoPanel` option can be used to make the panel automatically appear when diagnostics are added and close when no diagnostics are left.
+
 ## 6.7.1 (2024-05-15)
 
 ### Bug fixes
