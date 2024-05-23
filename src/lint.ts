@@ -67,6 +67,10 @@ interface LintConfig {
   /// around the range will hide it. Returning null falls back to this
   /// behavior.
   hideOn?: (tr: Transaction, from: number, to: number) => boolean | null
+  /// When enabled (defaults to off), this will cause the lint panel
+  /// to automatically open when diagnostics are found, and close when
+  /// all diagnostics are resolved or removed.
+  autoPanel?: boolean
 }
 
 interface LintGutterConfig {
@@ -157,18 +161,20 @@ const lintState = StateField.define<LintState>({
     return new LintState(Decoration.none, null, null)
   },
   update(value, tr) {
-    if (tr.docChanged) {
-      let mapped = value.diagnostics.map(tr.changes), selected = null
+    if (tr.docChanged && value.diagnostics.size) {
+      let mapped = value.diagnostics.map(tr.changes), selected = null, panel = value.panel
       if (value.selected) {
         let selPos = tr.changes.mapPos(value.selected.from, 1)
         selected = findDiagnostic(mapped, value.selected.diagnostic, selPos) || findDiagnostic(mapped, null, selPos)
       }
-      value = new LintState(mapped, value.panel, selected)
+      if (!mapped.size && panel && tr.state.facet(lintConfig).autoPanel) panel = null
+      value = new LintState(mapped, panel, selected)
     }
 
     for (let effect of tr.effects) {
       if (effect.is(setDiagnosticsEffect)) {
-        value = LintState.init(effect.value, value.panel, tr.state)
+        let panel = !tr.state.facet(lintConfig).autoPanel ? value.panel : effect.value.length ? LintPanel.open : null
+        value = LintState.init(effect.value, panel, tr.state)
       } else if (effect.is(togglePanel)) {
         value = new LintState(value.diagnostics, effect.value ? LintPanel.open : null, value.selected)
       } else if (effect.is(movePanelSelection)) {
