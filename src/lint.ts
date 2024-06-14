@@ -109,8 +109,7 @@ class LintState {
         }).range(d.from)
         : Decoration.mark({
           attributes: {class: "cm-lintRange cm-lintRange-" + d.severity + (d.markClass ? " " + d.markClass : "")},
-          diagnostic: d,
-          inclusive: true
+          diagnostic: d
         }).range(d.from, d.to)
     }), true)
     return new LintState(ranges, panel, findDiagnostic(ranges))
@@ -194,7 +193,7 @@ export function diagnosticCount(state: EditorState) {
   return lint ? lint.diagnostics.size : 0
 }
 
-const activeMark = Decoration.mark({class: "cm-lintRange cm-lintRange-active", inclusive: true})
+const activeMark = Decoration.mark({class: "cm-lintRange cm-lintRange-active"})
 
 function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
   let {diagnostics} = view.state.field(lintState)
