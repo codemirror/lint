@@ -1,3 +1,9 @@
+## 6.8.1 (2024-06-19)
+
+### Bug fixes
+
+Make lint markers non-inclusive again, since having them that way causes more issues than it solves.
+
 ## 6.8.0 (2024-05-23)
 
 ### New features
