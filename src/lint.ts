@@ -800,6 +800,13 @@ function markersForDiagnostics(doc: Text, diagnostics: readonly Diagnostic[]) {
 const lintGutterExtension = gutter({
   class: "cm-gutter-lint",
   markers: view => view.state.field(lintGutterMarkers),
+  widgetMarker: (view, widget, block) => {
+    let diagnostics: Diagnostic[] = []
+    view.state.field(lintGutterMarkers).between(block.from, block.to, (from, to, value) => {
+      diagnostics.push(...(value as LintGutterMarker).diagnostics)
+    })
+    return diagnostics.length ? new LintGutterMarker(diagnostics) : null
+  }
 })
 
 const lintGutterMarkers = StateField.define<RangeSet<GutterMarker>>({
