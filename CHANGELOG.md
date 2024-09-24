@@ -1,3 +1,11 @@
+## 6.8.2 (2024-09-24)
+
+### Bug fixes
+
+Show lint markers for code replaced by a block widget.
+
+When multiple linters are installed, start displaying results from ones that return quickly even if others are slow to return.
+
 ## 6.8.1 (2024-06-19)
 
 ### Bug fixes
