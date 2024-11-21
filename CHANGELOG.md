@@ -1,3 +1,9 @@
+## 6.8.3 (2024-11-21)
+
+### Bug fixes
+
+Fix an issue that prevented tooltips in the lint gutter from being displayed.
+
 ## 6.8.2 (2024-09-24)
 
 ### Bug fixes
