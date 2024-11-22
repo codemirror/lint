@@ -3,7 +3,7 @@ import {EditorView, ViewPlugin, Decoration, DecorationSet,
         hoverTooltip, Tooltip, showTooltip, gutter, GutterMarker,
         PanelConstructor, Panel, showPanel, getPanel} from "@codemirror/view"
 import {Text, StateEffect, StateField, Extension, TransactionSpec, Transaction,
-        EditorState, Facet, combineConfig, RangeSet, Range} from "@codemirror/state"
+        EditorState, Facet, combineConfig, RangeSet, Range, RangeSetBuilder} from "@codemirror/state"
 import elt from "crelt"
 
 type Severity = "hint" | "info" | "warning" | "error"
@@ -100,28 +100,64 @@ class LintState {
     if (diagnosticFilter)
       markedDiagnostics = diagnosticFilter(markedDiagnostics, state)
 
-    let ranges = Decoration.set(markedDiagnostics.map((d: Diagnostic) => {
-      // For zero-length ranges or ranges covering only a line break, create a widget
-      return d.from == d.to || (d.from == d.to - 1 && state.doc.lineAt(d.from).to == d.from)
-        ? Decoration.widget({
-          widget: new DiagnosticWidget(d),
-          diagnostic: d
-        }).range(d.from)
-        : Decoration.mark({
-          attributes: {class: "cm-lintRange cm-lintRange-" + d.severity + (d.markClass ? " " + d.markClass : "")},
-          diagnostic: d
-        }).range(d.from, d.to)
-    }), true)
-    return new LintState(ranges, panel, findDiagnostic(ranges))
+    let sorted = diagnostics.slice().sort((a, b) => a.from - b.from || a.to - b.to)
+    let deco = new RangeSetBuilder<Decoration>(), active: Diagnostic[] = [], pos = 0
+    for (let i = 0;;) {
+      let next = i == sorted.length ? null : sorted[i]
+      if (!next && !active.length) break
+      let from: number, to: number
+      if (active.length) {
+        from = pos
+        to = active.reduce((p, d) => Math.min(p, d.to), next && next.from > from ? next.from : 1e8)
+      } else {
+        from = next!.from
+        to = next!.to
+        active.push(next!)
+        i++
+      }
+      while (i < sorted.length) {
+        let next = sorted[i]
+        if (next.from == from && (next.to > next.from || next.to == from)) {
+          active.push(next)
+          i++
+          to = Math.min(next.to, to)
+        } else {
+          to = Math.min(next.from, to)
+          break
+        }
+      }
+      let sev = maxSeverity(active)
+      if (active.some(d => d.from == d.to || (d.from == d.to - 1 && state.doc.lineAt(d.from).to == d.from))) {
+        deco.add(from, from, Decoration.widget({
+          widget: new DiagnosticWidget(sev),
+          diagnostics: active.slice()
+        }))
+      } else {
+        let markClass = active.reduce((c, d) => d.markClass ? c + " " + d.markClass : c, "")
+        deco.add(from, to, Decoration.mark({
+          class: "cm-lintRange cm-lintRange-" + sev + markClass,
+          diagnostics: active.slice(),
+          inclusiveEnd: active.some(a => a.to > to)
+        }))
+      }
+      pos = to
+      for (let i = 0; i < active.length; i++) if (active[i].to <= pos) active.splice(i--, 1)
+    }
+    let set = deco.finish()
+    return new LintState(set, panel, findDiagnostic(set))
   }
 }
 
 function findDiagnostic(diagnostics: DecorationSet, diagnostic: Diagnostic | null = null, after = 0): SelectedDiagnostic | null {
   let found: SelectedDiagnostic | null = null
   diagnostics.between(after, 1e9, (from, to, {spec}) => {
-    if (diagnostic && spec.diagnostic != diagnostic) return
-    found = new SelectedDiagnostic(from, to, spec.diagnostic)
-    return false
+    if (diagnostic && spec.diagnostics.indexOf(diagnostic) < 0) return
+    if (!found)
+      found = new SelectedDiagnostic(from, to, diagnostic || spec.diagnostics[0])
+    else if (spec.diagnostics.indexOf(found.diagnostic) < 0)
+      return false
+    else
+      found = new SelectedDiagnostic(found.from, to, found.diagnostic)
   })
   return found
 }
@@ -197,27 +233,27 @@ const activeMark = Decoration.mark({class: "cm-lintRange cm-lintRange-active"})
 
 function lintTooltip(view: EditorView, pos: number, side: -1 | 1) {
   let {diagnostics} = view.state.field(lintState)
-  let found: Diagnostic[] = [], stackStart = 2e8, stackEnd = 0
+  let found: readonly Diagnostic[] | undefined, start = -1, end = -1
   diagnostics.between(pos - (side < 0 ? 1 : 0), pos + (side > 0 ? 1 : 0), (from, to, {spec}) => {
     if (pos >= from && pos <= to &&
         (from == to || ((pos > from || side > 0) && (pos < to || side < 0)))) {
-      found.push(spec.diagnostic)
-      stackStart = Math.min(from, stackStart)
-      stackEnd = Math.max(to, stackEnd)
+      found = spec.diagnostics
+      start = from
+      end = to
+      return false
     }
   })
 
   let diagnosticFilter = view.state.facet(lintConfig).tooltipFilter
-  if (diagnosticFilter) found = diagnosticFilter(found, view.state)
-
-  if (!found.length) return null
+  if (found && diagnosticFilter) found = diagnosticFilter(found, view.state)
+  if (!found) return null
 
   return {
-    pos: stackStart,
-    end: stackEnd,
-    above: view.state.doc.lineAt(stackStart).to < stackEnd,
+    pos: start,
+    end: end,
+    above: view.state.doc.lineAt(start).to < end,
     create() {
-      return {dom: diagnosticsTooltip(view, found)}
+      return {dom: diagnosticsTooltip(view, found!)}
     }
   }
 }
@@ -429,12 +465,12 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
 }
 
 class DiagnosticWidget extends WidgetType {
-  constructor(readonly diagnostic: Diagnostic) {super()}
+  constructor(readonly sev: Severity) {super()}
 
-  eq(other: DiagnosticWidget) { return other.diagnostic == this.diagnostic }
+  eq(other: DiagnosticWidget) { return other.sev == this.sev }
 
   toDOM() {
-    return elt("span", {class: "cm-lintPoint cm-lintPoint-" + this.diagnostic.severity})
+    return elt("span", {class: "cm-lintPoint cm-lintPoint-" + this.sev})
   }
 }
 
@@ -513,27 +549,32 @@ class LintPanel implements Panel {
   update() {
     let {diagnostics, selected} = this.view.state.field(lintState)
     let i = 0, needsSync = false, newSelectedItem: PanelItem | null = null
+    let seen = new Set<Diagnostic>()
     diagnostics.between(0, this.view.state.doc.length, (_start, _end, {spec}) => {
-      let found = -1, item
-      for (let j = i; j < this.items.length; j++)
-        if (this.items[j].diagnostic == spec.diagnostic) { found = j; break }
-      if (found < 0) {
-        item = new PanelItem(this.view, spec.diagnostic)
-        this.items.splice(i, 0, item)
-        needsSync = true
-      } else {
-        item = this.items[found]
-        if (found > i) { this.items.splice(i, found - i); needsSync = true }
-      }
-      if (selected && item.diagnostic == selected.diagnostic) {
-        if (!item.dom.hasAttribute("aria-selected")) {
-          item.dom.setAttribute("aria-selected", "true")
-          newSelectedItem = item
+      for (let diagnostic of spec.diagnostics) {
+        if (seen.has(diagnostic)) continue
+        seen.add(diagnostic)
+        let found = -1, item
+        for (let j = i; j < this.items.length; j++)
+          if (this.items[j].diagnostic == diagnostic) { found = j; break }
+        if (found < 0) {
+          item = new PanelItem(this.view, diagnostic)
+          this.items.splice(i, 0, item)
+          needsSync = true
+        } else {
+          item = this.items[found]
+          if (found > i) { this.items.splice(i, found - i); needsSync = true }
         }
-      } else if (item.dom.hasAttribute("aria-selected")) {
-        item.dom.removeAttribute("aria-selected")
+        if (selected && item.diagnostic == selected.diagnostic) {
+          if (!item.dom.hasAttribute("aria-selected")) {
+            item.dom.setAttribute("aria-selected", "true")
+            newSelectedItem = item
+          }
+        } else if (item.dom.hasAttribute("aria-selected")) {
+          item.dom.removeAttribute("aria-selected")
+        }
+        i++
       }
-      i++
     })
     while (i < this.items.length && !(this.items.length == 1 && this.items[0].diagnostic.from < 0)) {
       needsSync = true
@@ -712,12 +753,20 @@ function severityWeight(sev: Severity) {
   return sev == "error" ? 4 : sev == "warning" ? 3 : sev == "info" ? 2 : 1
 }
 
+function maxSeverity(diagnostics: readonly Diagnostic[]) {
+  let sev: Severity = "hint", weight = 1
+  for (let d of diagnostics) {
+    let w = severityWeight(d.severity)
+    if (w > weight) { weight = w; sev = d.severity }
+  }
+  return sev
+}
+
 class LintGutterMarker extends GutterMarker {
   severity: Severity
   constructor(readonly diagnostics: readonly Diagnostic[]) {
     super()
-    this.severity = diagnostics.reduce((max, d) => severityWeight(max) < severityWeight(d.severity) ? d.severity : max,
-                                       "hint" as Severity)
+    this.severity = maxSeverity(diagnostics)
   }
 
   toDOM(view: EditorView) {
@@ -905,7 +954,20 @@ export function lintGutter(config: LintGutterConfig = {}): Extension {
 /// arguments hold the diagnostic's current position.
 export function forEachDiagnostic(state: EditorState, f: (d: Diagnostic, from: number, to: number) => void) {
   let lState = state.field(lintState, false)
-  if (lState && lState.diagnostics.size)
-    for (let iter = RangeSet.iter([lState.diagnostics]); iter.value; iter.next())
-      f(iter.value.spec.diagnostic, iter.from, iter.to)
+  if (lState && lState.diagnostics.size) {
+    let pending: Diagnostic[] = [], pendingStart: number[] = [], lastEnd = -1
+    for (let iter = RangeSet.iter([lState.diagnostics]);; iter.next()) {
+      for (let i = 0; i < pending.length; i++) if (!iter.value || iter.value.spec.diagnostics.indexOf(pending[i]) < 0) {
+        f(pending[i], pendingStart[i], lastEnd)
+        pending.splice(i, 1)
+        pendingStart.splice(i--, 1)
+      }
+      if (!iter.value) break
+      for (let d of iter.value.spec.diagnostics) if (pending.indexOf(d) < 0) {
+        pending.push(d)
+        pendingStart.push(iter.from)
+      }
+      lastEnd = iter.to
+    }
+  }
 }
