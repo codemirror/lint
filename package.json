@@ -1,6 +1,6 @@
 {
   "name": "@codemirror/lint",
-  "version": "6.8.3",
+  "version": "6.8.4",
   "description": "Linting support for the CodeMirror code editor",
   "scripts": {
     "test": "cm-runtests",

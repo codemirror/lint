@@ -1,3 +1,11 @@
+## 6.8.4 (2024-11-28)
+
+### Bug fixes
+
+Don't create overlapping decorations when diagnostics overlap.
+
+Fix an issue where block widgets could cause the lint gutter to show diagnostics multiple times.
+
 ## 6.8.3 (2024-11-21)
 
 ### Bug fixes
