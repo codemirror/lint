@@ -377,7 +377,7 @@ function batchResults<T>(promises: readonly Promise<T>[], sink: (values: T[]) =>
     collected.push(value)
     clearTimeout(timeout)
     if (collected.length == promises.length) sink(collected)
-    else setTimeout(() => sink(collected), 200)
+    else timeout = setTimeout(() => sink(collected), 200)
   }, error)
 }
 
