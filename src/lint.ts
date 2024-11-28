@@ -859,7 +859,8 @@ const lintGutterExtension = gutter({
   widgetMarker: (view, widget, block) => {
     let diagnostics: Diagnostic[] = []
     view.state.field(lintGutterMarkers).between(block.from, block.to, (from, to, value) => {
-      diagnostics.push(...(value as LintGutterMarker).diagnostics)
+      if (from > block.from && from < block.to)
+        diagnostics.push(...(value as LintGutterMarker).diagnostics)
     })
     return diagnostics.length ? new LintGutterMarker(diagnostics) : null
   }
