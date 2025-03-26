@@ -1,3 +1,9 @@
+## 6.8.5 (2025-03-26)
+
+### Bug fixes
+
+Fix a regression (since 6.8.4) that broke the `markerFilter` option.
+
 ## 6.8.4 (2024-11-28)
 
 ### Bug fixes
