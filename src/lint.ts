@@ -39,6 +39,8 @@ export interface Diagnostic {
 export interface Action {
   /// The label to show to the user. Should be relatively short.
   name: string
+  /// When given, add an extra CSS class to the action
+  markClass?: string
   /// The function to call when the user activates this action. Is
   /// given the diagnostic's _current_ position, which may have
   /// changed since the creation of the diagnostic, due to editing.
@@ -452,9 +454,10 @@ function renderDiagnostic(view: EditorView, diagnostic: Diagnostic, inPanel: boo
       let nameElt = keyIndex < 0 ? name : [name.slice(0, keyIndex),
                                            elt("u", name.slice(keyIndex, keyIndex + 1)),
                                            name.slice(keyIndex + 1)]
+      let markClass = action.markClass ? " " + action.markClass : ""
       return elt("button", {
         type: "button",
-        class: "cm-diagnosticAction",
+        class: "cm-diagnosticAction" + markClass,
         onclick: click,
         onmousedown: click,
         "aria-label": ` Action: ${name}${keyIndex < 0 ? "" : ` (access key "${keys[i]})"`}.`
