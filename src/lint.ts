@@ -39,7 +39,7 @@ export interface Diagnostic {
 export interface Action {
   /// The label to show to the user. Should be relatively short.
   name: string
-  /// When given, add an extra CSS class to the action
+  /// When given, add an extra CSS class to the action button.
   markClass?: string
   /// The function to call when the user activates this action. Is
   /// given the diagnostic's _current_ position, which may have
