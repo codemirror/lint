@@ -394,16 +394,28 @@ const lintConfig = Facet.define<{source: LintSource | null, config: LintConfig},
         needsRefresh: null,
         hideOn: () => null,
       }, {
-        needsRefresh: (a, b) => !a ? b : !b ? a : u => a(u) || b(u)
+        delay: Math.max,
+        markerFilter: combineFilter,
+        tooltipFilter: combineFilter,
+        needsRefresh: (a, b) => !a ? b : !b ? a : u => a(u) || b(u),
+        hideOn: (a, b) => !a ? b : !b ? a : (t, x, y) => a(t, x, y) || b(t, x, y),
+        autoPanel: (a, b) => a || b
       })
     }
   }
 })
 
+function combineFilter(a: DiagnosticFilter | null, b: DiagnosticFilter | null): DiagnosticFilter | null {
+  return !a ? b : !b ? a : (d, s) => b(a(d, s), s)
+}
+
 /// Given a diagnostic source, this function returns an extension that
 /// enables linting with that source. It will be called whenever the
-/// editor is idle (after its content changed). If `null` is given as
-/// source, this only configures the lint extension.
+/// editor is idle (after its content changed).
+///
+/// Note that settings given here will apply to all linters active in
+/// the editor. If `null` is given as source, this only configures the
+/// lint extension.
 export function linter(
   source: LintSource | null,
   config: LintConfig = {}
