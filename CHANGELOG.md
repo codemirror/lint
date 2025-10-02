@@ -1,3 +1,13 @@
+## 6.9.0 (2025-10-02)
+
+### Bug fixes
+
+Multiple configurations to `linter` will now be merged without raising an error.
+
+### New features
+
+The new `markClass` option to actions makes it possible to style action buttons.
+
 ## 6.8.5 (2025-03-26)
 
 ### Bug fixes
