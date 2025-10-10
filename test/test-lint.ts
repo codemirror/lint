@@ -18,8 +18,8 @@ function diagnostics(s: EditorState) {
   return found
 }
 
-function state(ds: readonly Diagnostic[]) {
-  let s = EditorState.create({doc: "0123456789"})
+function state(ds: readonly Diagnostic[], doc = "0123456789") {
+  let s = EditorState.create({doc})
   return s.update(setDiagnostics(s, ds)).state
 }
 
@@ -57,5 +57,15 @@ describe("lint", () => {
       result.push([from, to, /lintRange-(\w+)/.exec(val.spec.class)![1]])
     })
     istJSON(result, [[0, 3, "error"], [3, 4, "error"], [4, 5, "error"], [5, 8, "warning"]])
+  })
+
+  it("creates widgets for empty and newline-only ranges", () => {
+    let ds = [w(0, 0, "a"), e(1, 2, "b"), e(3, 5, "c"), w(6, 6, "d")]
+    let deco = state(ds, "a\nb\n\ncd").facet(EditorView.decorations)[0] as DecorationSet
+    let result: [number, number, boolean][] = []
+    deco.between(0, 10, (from, to, val) => {
+      result.push([from, to, !!val.widget])
+    })
+    istJSON(result, [[0, 0, true], [1, 1, true], [3, 3, true], [6, 6, true]])
   })
 })
