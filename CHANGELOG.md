@@ -1,3 +1,9 @@
+## 6.9.1 (2025-10-23)
+
+### Bug fixes
+
+Properly display diagnostics that just cover multiple newlines as widgets.
+
 ## 6.9.0 (2025-10-02)
 
 ### Bug fixes
