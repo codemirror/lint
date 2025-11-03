@@ -103,7 +103,7 @@ class LintState {
 
     let sorted = diagnostics.slice().sort((a, b) => a.from - b.from || a.to - b.to)
     let deco = new RangeSetBuilder<Decoration>(), active: Diagnostic[] = [], pos = 0
-    let scan = state.doc.iter(), scanPos = 0
+    let scan = state.doc.iter(), scanPos = 0, docLen = state.doc.length
     for (let i = 0;;) {
       let next = i == sorted.length ? null : sorted[i]
       if (!next && !active.length) break
@@ -113,6 +113,7 @@ class LintState {
         to = active.reduce((p, d) => Math.min(p, d.to), next && next.from > from ? next.from : 1e8)
       } else {
         from = next!.from
+        if (from > docLen) break
         to = next!.to
         active.push(next!)
         i++
@@ -128,8 +129,9 @@ class LintState {
           break
         }
       }
+      to = Math.min(to, docLen)
       let widget = false
-      if (active.some(d => d.from == from && d.to == to)) {
+      if (active.some(d => d.from == from && (d.to == to || to == docLen))) {
         widget = from == to
         if (!widget && to - from < 10) {
           let behind = from - (scanPos + scan.value.length)
@@ -158,6 +160,7 @@ class LintState {
         }))
       }
       pos = to
+      if (pos == docLen) break
       for (let i = 0; i < active.length; i++) if (active[i].to <= pos) active.splice(i--, 1)
     }
     let set = deco.finish()
