@@ -1,3 +1,9 @@
+## 6.9.2 (2025-11-03)
+
+### Bug fixes
+
+Fix an infinite loop that would occur when a diagnostic pointed beyond the end of the document.
+
 ## 6.9.1 (2025-10-23)
 
 ### Bug fixes
