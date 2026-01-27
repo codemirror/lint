@@ -525,6 +525,7 @@ class LintPanel implements Panel {
 
   constructor(readonly view: EditorView) {
     let onkeydown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.altKey || event.metaKey) return
       if (event.keyCode == 27) { // Escape
         closeLintPanel(this.view)
         this.view.focus()
