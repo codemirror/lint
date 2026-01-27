@@ -1,3 +1,9 @@
+## 6.9.3 (2026-01-27)
+
+### Bug fixes
+
+Fix an issue where the lint panel inappropriately blocks the default behavior of key combinations with Ctrl, Alt, or Cmd held.
+
 ## 6.9.2 (2025-11-03)
 
 ### Bug fixes
