@@ -1,3 +1,9 @@
+## 6.9.4 (2026-02-11)
+
+### Bug fixes
+
+Make sure `nextDiagnostic` selects entire diagnostics, even when they overlap with other diagnostics.
+
 ## 6.9.3 (2026-01-27)
 
 ### Bug fixes
