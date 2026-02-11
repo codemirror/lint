@@ -304,10 +304,10 @@ export const closeLintPanel: Command = (view: EditorView) => {
 export const nextDiagnostic: Command = (view: EditorView) => {
   let field = view.state.field(lintState, false)
   if (!field) return false
-  let sel = view.state.selection.main, next = field.diagnostics.iter(sel.to + 1)
-  if (!next.value) {
-    next = field.diagnostics.iter(0)
-    if (!next.value || next.from == sel.from && next.to == sel.to) return false
+  let sel = view.state.selection.main, next = findDiagnostic(field.diagnostics, null, sel.to + 1)
+  if (!next) {
+    next = findDiagnostic(field.diagnostics, null, 0)
+    if (!next || next.from == sel.from && next.to == sel.to) return false
   }
   view.dispatch({selection: {anchor: next.from, head: next.to}, scrollIntoView: true})
   return true
