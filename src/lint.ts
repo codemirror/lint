@@ -780,6 +780,13 @@ const baseTheme = EditorView.baseTheme({
       padding: 0,
       margin: 0
     }
+  },
+
+  "&dark .cm-lintRange-active": { backgroundColor: "#86714a80" },
+  "&dark .cm-panel.cm-panel-lint ul": {
+    "& [aria-selected]": {
+      backgroundColor: "#2e343e",
+    },
   }
 })
 
