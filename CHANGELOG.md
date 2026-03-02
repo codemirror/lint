@@ -1,3 +1,9 @@
+## 6.9.5 (2026-03-02)
+
+### Bug fixes
+
+Use more appropriate background colors for the selected diagnostic in dark mode.
+
 ## 6.9.4 (2026-02-11)
 
 ### Bug fixes
