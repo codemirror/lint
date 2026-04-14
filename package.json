@@ -35,6 +35,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/codemirror/lint.git"
+    "url": "git+https://code.haverbeke.berlin/codemirror/lint.git"
   }
 }
