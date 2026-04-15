@@ -1,3 +1,5 @@
+**This repository has moved to https://code.haverbeke.berlin/codemirror/lint**
+
 # @codemirror/lint [![NPM version](https://img.shields.io/npm/v/@codemirror/lint.svg)](https://www.npmjs.org/package/@codemirror/lint)
 
 [ [**WEBSITE**](https://codemirror.net/) | [**DOCS**](https://codemirror.net/docs/ref/#lint) | [**ISSUES**](https://code.haverbeke.berlin/codemirror/dev/issues) | [**FORUM**](https://discuss.codemirror.net/) | [**CHANGELOG**](https://code.haverbeke.berlin/codemirror/lint/src/branch/main/CHANGELOG.md) ]
